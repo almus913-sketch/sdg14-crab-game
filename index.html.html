@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>借一個明天｜SDG 14 寄居蟹的尋殼旅程</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #101e2b;
+    --panel: #192d3b;
+    --line: #365162;
+    --cream: #f8ebcb;
+    --muted: #a9bec6;
+    --mint: #92e0ba;
+    --coral: #fa8e81;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    padding: 24px 14px 36px;
+    background:
+      radial-gradient(ellipse at top, #244a56 0, transparent 65%),
+      var(--bg);
+    color: var(--cream);
+    font-family: ui-monospace, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  }
+  main { width: min(100%, 1000px); margin: auto; }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 18px;
+  }
+  .eyebrow {
+    color: var(--mint); font-size: 11px;
+    letter-spacing: .18em; margin: 0 0 7px;
+  }
+  h1 { margin: 0; font-size: clamp(25px, 5vw, 38px); letter-spacing: .08em; }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
+  button {
+    font: inherit; color: var(--cream); background: #284553;
+    border: 2px solid #54737d; border-radius: 3px;
+    padding: 10px 16px; cursor: pointer;
+    box-shadow: 0 3px 0 #0b1821;
+    touch-action: manipulation;
+  }
+  button:hover { background: #355b69; }
+  button:active { transform: translateY(2px); box-shadow: none; }
+  button:focus-visible { outline: 3px solid var(--mint); outline-offset: 3px; }
+  button:disabled { opacity: .4; cursor: default; }
+  .primary {
+    color: #132c2a; background: var(--mint);
+    border-color: #c6f1d9; font-weight: bold;
+  }
+  .primary:hover { background: #b0edcb; }
+  #hud {
+    display: grid; grid-template-columns: 1.1fr .65fr 1.25fr .8fr;
+    border: 2px solid var(--line); background: #142733;
+  }
+  .hud-cell { padding: 12px 14px; border-right: 1px solid var(--line); }
+  .hud-cell:last-child { border-right: 0; }
+  .label { display: block; color: var(--muted); font-size: 10px; margin-bottom: 6px; }
+  .value { font-size: 14px; font-weight: bold; }
+  #hearts { color: var(--coral); letter-spacing: 5px; font-size: 20px; }
+  #clock { color: var(--mint); }
+  #clock[data-locked="true"] { color: #ffd38a; }
+  #timeline { height: 6px; background: #0c1720; position: relative; }
+  #timeline::after {
+    content: ""; position: absolute; left: 75%; top: 0; bottom: 0;
+    width: 2px; background: #f8ebcb;
+  }
+  #progress { height: 100%; width: 0; background: var(--mint); }
+  #frame {
+    position: relative; border: 2px solid var(--line);
+    border-top: 0; background: #102733; overflow: hidden;
+  }
+  #world {
+    display: block; width: 100%; height: auto;
+    image-rendering: pixelated; outline: none;
+  }
+  #overlay {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; overflow: auto; padding: 14px;
+    background: rgba(7, 16, 26, .82);
+  }
+  .dialog {
+    width: min(100%, 590px); margin: auto;
+    padding: 18px; border: 2px solid #75908e;
+    background: #172c37;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, .28);
+  }
+  #sceneTitle { font-size: 23px; margin: 0 0 12px; }
+  #sceneArt {
+    display: block; width: 100%; height: auto;
+    background: #24444d; border: 2px solid #0b1c25;
+    image-rendering: pixelated;
+  }
+  #sceneText {
+    font-size: 14px; line-height: 1.85;
+    white-space: pre-line; margin: 13px 0;
+  }
+  #sceneQuote {
+    border-left: 3px solid var(--mint); padding-left: 12px;
+    color: #bce8cf; font-size: 14px; line-height: 1.7;
+  }
+  #next { width: 100%; margin-top: 5px; }
+  #hint {
+    min-height: 51px; margin: 0; padding: 13px 15px;
+    background: var(--panel); border: 2px solid var(--line);
+    border-top: 0; font-size: 13px; line-height: 1.6;
+  }
+  .controls {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; margin: 14px 0;
+  }
+  .keyboard { color: var(--muted); font-size: 12px; line-height: 1.8; }
+  kbd {
+    background: #28404d; border: 1px solid #4b626d;
+    border-bottom-width: 3px; padding: 2px 5px; border-radius: 3px;
+  }
+  .touch-controls { display: flex; align-items: center; gap: 20px; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 40px); gap: 4px; }
+  .dpad button { height: 37px; padding: 0; touch-action: none; }
+  .dpad [data-key="ArrowUp"] { grid-column: 2; }
+  .dpad [data-key="ArrowLeft"] { grid-column: 1; grid-row: 2; }
+  .dpad [data-key="ArrowDown"] { grid-column: 2; grid-row: 2; }
+  .dpad [data-key="ArrowRight"] { grid-column: 3; grid-row: 2; }
+  #swap { min-height: 66px; color: var(--mint); }
+  .collection {
+    margin-top: 20px; padding: 15px;
+    border: 1px solid var(--line); background: rgba(25, 45, 59, .65);
+  }
+  .collection-title { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  #gallery { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge {
+    padding: 7px 9px; color: #738b99;
+    background: #11232f; border: 1px solid #304754; font-size: 11px;
+  }
+  .badge.unlocked { color: var(--mint); border-color: #73a591; }
+  details {
+    margin-top: 16px; padding: 14px;
+    border: 1px solid var(--line); color: var(--muted);
+    font-size: 12px; line-height: 1.9;
+  }
+  summary { cursor: pointer; color: var(--cream); }
+  details li { margin-bottom: 6px; }
+  a { color: var(--mint); }
+  .note { color: #d7c6a0; }
+  @media (max-width: 620px) {
+    body { padding: 14px 8px 25px; }
+    header { align-items: flex-start; }
+    header button { padding: 9px 11px; font-size: 12px; }
+    #hud { grid-template-columns: 1fr 1fr; }
+    .hud-cell { padding: 9px 11px; }
+    .hud-cell:nth-child(2) { border-right: 0; }
+    .hud-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .value { font-size: 12px; }
+    #overlay { position: fixed; padding: 14px; }
+    .dialog { padding: 14px; }
+    #sceneTitle { font-size: 22px; }
+    .controls { flex-wrap: wrap; justify-content: center; }
+    .keyboard { width: 100%; text-align: center; }
+    .touch-controls { width: 100%; justify-content: space-between; padding: 0 12px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <p class="eyebrow">SDG 14 · A PIXEL SHORE STORY</p>
+      <h1>借一個明天</h1>
+      <p class="subtitle">一隻寄居蟹，四段海岸，一個可以安心醒來的家。</p>
+    </div>
+    <button id="pause" type="button" disabled>暫停 P</button>
+  </header>
+
+  <section id="hud" aria-label="遊戲狀態">
+    <div class="hud-cell">
+      <span class="label">目前海岸</span>
+      <span class="value" id="chapter"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label">生命值</span>
+      <span class="value" id="hearts" aria-label="三點生命"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label">目前寄居物</span>
+      <span class="value" id="home"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label">本日時間</span>
+      <span class="value" id="clock"></span>
+    </div>
+  </section>
+  <div id="timeline"><div id="progress"></div></div>
+
+  <section id="frame" aria-label="遊戲畫面">
+    <canvas id="world" width="480" height="288" tabindex="0"
+      aria-label="俯視海岸遊戲。方向鍵或 WASD 移動，E 或空白鍵換殼。">
+      此瀏覽器無法建立 Canvas 畫面。
+    </canvas>
+
+    <div id="overlay" hidden>
+      <section class="dialog" role="dialog" aria-modal="true"
+        aria-labelledby="sceneTitle" aria-describedby="sceneText">
+        <p class="eyebrow" id="sceneEyebrow"></p>
+        <h2 id="sceneTitle"></h2>
+        <canvas id="sceneArt" width="384" height="152" role="img"></canvas>
+        <p id="sceneText"></p>
+        <p id="sceneQuote" hidden></p>
+        <button id="next" class="primary" type="button"></button>
+      </section>
+    </div>
+  </section>
+
+  <p id="hint" role="status" aria-live="polite"></p>
+
+  <div class="controls">
+    <div class="keyboard">
+      <kbd>WASD</kbd>／<kbd>↑↓←→</kbd> 移動　
+      <kbd>E</kbd>／<kbd>Space</kbd> 換殼　
+      <kbd>P</kbd> 暫停
+    </div>
+    <div class="touch-controls" aria-label="觸控操作">
+      <div class="dpad">
+        <button type="button" data-key="ArrowUp" aria-label="向上">▲</button>
+        <button type="button" data-key="ArrowLeft" aria-label="向左">◀</button>
+        <button type="button" data-key="ArrowDown" aria-label="向下">▼</button>
+        <button type="button" data-key="ArrowRight" aria-label="向右">▶</button>
+      </div>
+      <button id="swap" type="button">換殼 E</button>
+    </div>
+  </div>
+
+  <section class="collection">
+    <div class="collection-title" id="collectionTitle">結局圖鑑</div>
+    <div id="gallery"></div>
+  </section>
+
+  <details>
+    <summary>遊戲規則、科學說明與參考資料</summary>
+    <ul>
+      <li>每次新旅程有 3 點生命，起初背著天然貝殼（好）；生命不會在過關時恢復。</li>
+      <li>每關前 15 秒可以換殼，之後鎖定寄居物，但仍能移動避險；第 20 秒結算。</li>
+      <li>天然貝殼（好）：本晚不扣血，之後變成天然貝殼（壞）。</li>
+      <li>天然貝殼（壞）／瓶蓋：本晚受天敵攻擊，扣 1 點生命。</li>
+      <li>塑膠瓶／玻璃瓶：本晚避過天敵，但各有 50% 機率受困，直接進入死亡結局。每晚只判定一次。</li>
+      <li>第二關有 3 次隨機踩踏；腳印預警出現 1 秒後踩下，每次命中扣 1 點生命。</li>
+      <li>第三關開始立即扣 1 點生命；初始地圖的 6 枚天然貝殼中，3 枚好、3 枚壞。</li>
+      <li>換殼會把原本的寄居物留在地上。寄居物及剩餘生命會帶到下一關。</li>
+      <li>生命歸零立即結束；瓶內受困則直接使生命歸零。</li>
+      <li>劇情、關卡介紹及暫停畫面不計時。切換視窗或分頁會自動暫停。</li>
+    </ul>
+    <p class="note">
+      科學說明：本作是濃縮不同海岸情境的寓言，不是單一物種的生態模擬。
+      每夜好殼變壞、固定扣血、半數好殼及 50% 受困率都是遊戲化設定，
+      並非實測比例。淨灘也不代表能立即逆轉海洋酸化。
+    </p>
+    <p>主題資料：</p>
+    <ul>
+      <li><a href="https://sdgs.un.org/goals/goal14" target="_blank" rel="noopener noreferrer">聯合國：SDG 14 及各項目標</a></li>
+      <li><a href="https://www.nhm.ac.uk/press-office/press-releases/plastic-debris-killing-half-a-million-crabs-on-remote-islands.html" target="_blank" rel="noopener noreferrer">英國自然史博物館：塑膠容器與寄居蟹陷阱</a></li>
+      <li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10044271/" target="_blank" rel="noopener noreferrer">研究：短期微塑膠暴露與寄居蟹選殼認知</a></li>
+      <li><a href="https://www.epa.gov/ocean-acidification/effects-ocean-and-coastal-acidification-marine-life" target="_blank" rel="noopener noreferrer">美國環保署：酸化對海洋生物及造殼的影響</a></li>
+    </ul>
+  </details>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const RULES = Object.freeze({
+    maxHp: 3,
+    swapUntil: 15,
+    dayDuration: 20,
+    bottleTrapChance: 0.5,
+    footDelay: 1,
+    speed: 108,
+    reach: 29
+  });
+
+  const W = 480, H = 288, MW = 720, MH = 432;
+  const $ = id => document.getElementById(id);
+  const canvas = $("world"), ctx = canvas.getContext("2d");
+  const art = $("sceneArt"), artCtx = art.getContext("2d");
+  if (!ctx || !artCtx) {
+    $("hint").textContent = "此瀏覽器無法建立 Canvas 畫面。";
+    return;
+  }
+  ctx.imageSmoothingEnabled = false;
+  artCtx.imageSmoothingEnabled = false;
+
+  const INFO = {
+    good: { name: "天然貝殼（好）", tip: "本晚安全；翌日變成壞殼" },
+    bad: { name: "天然貝殼（壞）", tip: "本晚會被天敵攻擊，生命 −1" },
+    cap: { name: "瓶蓋", tip: "本晚會被天敵攻擊，生命 −1" },
+    plastic: { name: "塑膠瓶", tip: "避過天敵，但本晚有 50% 受困風險" },
+    glass: { name: "玻璃瓶", tip: "避過天敵，但本晚有 50% 受困風險" }
+  };
+
+  const copies = (type, count) => Array(count).fill(type);
+  const LEVELS = [
+    {
+      name: "原本的家",
+      tag: "第一關 · 尚未被改變的海岸",
+      intro: "那時候，海浪帶來的，是貝殼。\n我背著一個小小的家，在潮池之間走動。明天，好像總會到來。",
+      mission: "熟悉移動與換殼。這裡的天然空殼全是好殼；靠近後按 E。",
+      types: copies("good", 21),
+      palette: ["#e6ce92", "#f1dfad", "#60c7b7", "#288d9f", "#b8f1d1"],
+      debris: 0,
+      friends: 7
+    },
+    {
+      name: "塑膠入侵",
+      tag: "第二關 · 人潮退去以後",
+      intro: "後來，海灘變得很熱鬧。\n鮮豔的東西越來越多，真正的殼卻越來越少。頭頂的影子，也不再只是雲。",
+      mission: "尋找少量好殼。共有 3 次隨機踩踏：腳印預警出現 1 秒後踩下，命中扣 1 點生命。",
+      types: [
+        ...copies("good", 3), ...copies("bad", 3),
+        ...copies("cap", 8), ...copies("plastic", 5),
+        ...copies("glass", 4)
+      ],
+      palette: ["#b7b19a", "#c8c0a9", "#7ca8a4", "#526f80", "#c1d3c5"],
+      debris: 65,
+      friends: 2
+    },
+    {
+      name: "微型危機",
+      tag: "第三關 · 看不見的改變",
+      intro: "我來到礁岸的潮池。\n有些殼看起來仍像從前，卻已經布滿裂紋。還有一些危險，小得幾乎看不見。",
+      mission: "開始本關立即扣 1 點生命。初始 6 枚天然殼只有 3 枚是好殼，請辨認裂紋。",
+      types: [
+        ...copies("good", 3), ...copies("bad", 3),
+        ...copies("cap", 3), ...copies("plastic", 3),
+        ...copies("glass", 2)
+      ],
+      palette: ["#828e8c", "#9ca5a0", "#647e83", "#394f64", "#a7bfba"],
+      debris: 90,
+      friends: 1
+    },
+    {
+      name: "淨灘與復甦",
+      tag: "最終關 · 被留下來的家",
+      intro: "再往前走，有人彎下身，把垃圾帶走。\n這一次，他們把天然空殼留在沙灘上。慢慢地，我又看見了其他寄居蟹。",
+      mission: "這裡有大量好殼。生命不會自動恢復；請換上安全的天然貝殼，度過最後一晚。",
+      types: copies("good", 25),
+      palette: ["#dfcf9d", "#f0dfb3", "#6dc6b4", "#318d9c", "#c7efcb"],
+      debris: 12,
+      friends: 10
+    }
+  ];
+
+  const ENDINGS = {
+    win: {
+      name: "好結局｜明天，仍有家",
+      kind: "win",
+      text: "清晨的潮水退去，我醒了過來。\n海岸上有同伴，也有足夠的天然空殼。我終於不用把每一個明天，都交給運氣。",
+      quote: "帶走垃圾，留下天然空殼；讓海岸，也留下牠們的家。"
+    },
+    predator: {
+      name: "壞結局一｜擋不住的夜",
+      kind: "predator",
+      text: "我把身體縮到最深的地方。\n可是，這個不合適的家，沒能擋住天敵。最後一點生命，消失在潮聲裡。",
+      quote: "別把海岸上的天然空殼都帶走：你眼中的紀念品，可能是牠們的庇護所。"
+    },
+    foot: {
+      name: "壞結局二｜巨大的腳步",
+      kind: "foot",
+      text: "影子落下來時，我已經來不及躲開。\n對遊客來說，只是沙灘上的一步；對我來說，卻是整段旅程的終點。",
+      quote: "親近海岸時放慢腳步，留意腳下的小生命。"
+    },
+    micro: {
+      name: "壞結局三｜看不見的重量",
+      kind: "micro",
+      text: "我仍然看得見前面的貝殼，卻再也走不到那裡。\n旅途中累積的傷害，與這次看不見的污染，耗盡了我最後的生命。",
+      quote: "保護海洋，不只清走看得見的垃圾，也要從源頭減少塑膠污染。"
+    },
+    trap: {
+      name: "壞結局四｜沒有出口的家",
+      kind: "trap",
+      text: "瓶子讓我躲過了天敵，卻沒有讓我走出去。\n找不到食物的日子被濃縮成最後一幕：我餓死在瓶內。死亡留下的化學訊號吸引其他寄居蟹前來，同一個瓶子，成了接連奪走生命的「集體陷阱」。",
+      quote: "一個被遺下的容器，可能困住不只一個生命；減少廢棄物，也要安全清除海岸垃圾。"
+    }
+  };
+
+  const keys = new Set();
+  let nextAction = null;
+  let S;
+  let unlocked = new Set();
+
+  try {
+    const saved = JSON.parse(localStorage.getItem("sdg14-crab-endings") || "[]");
+    if (Array.isArray(saved)) {
+      unlocked = new Set(saved.filter(key => Object.hasOwn(ENDINGS, key)));
+    }
+  } catch {}
+
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const noise = (x, y, seed = 0) => {
+    const n = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
+    return n - Math.floor(n);
+  };
+
+  function setText(id, value) {
+    if ($(id).textContent !== value) $(id).textContent = value;
+  }
+
+  function clearInput() {
+    keys.clear();
+  }
+
+  function rect(g, x, y, w, h, color) {
+    g.fillStyle = color;
+    g.fillRect(Math.round(x), Math.round(y), Math.ceil(w), Math.ceil(h));
+  }
+
+  function shell(g, x, y, type, scale = 1) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+
+    if (type === "good" || type === "bad") {
+      const good = type === "good";
+      const dark = good ? "#865847" : "#505e64";
+      const mid = good ? "#d9a777" : "#8f9898";
+      const light = good ? "#ffe4a8" : "#ccd0c3";
+      rect(g, -7, -5, 14, 11, dark);
+      rect(g, -5, -8, 10, 15, dark);
+      rect(g, -6, -4, 12, 9, mid);
+      rect(g, -4, -7, 8, 13, mid);
+      rect(g, -3, -5, 7, 2, light);
+      rect(g, 3, -3, 2, 6, light);
+      rect(g, -3, 2, 6, 2, light);
+      rect(g, -4, -2, 2, 4, light);
+      rect(g, -1, -2, 3, 2, dark);
+      if (!good) {
+        rect(g, -2, -7, 2, 5, "#35464f");
+        rect(g, -4, -3, 3, 2, "#35464f");
+        rect(g, -4, -1, 2, 5, "#35464f");
+        rect(g, 3, 4, 4, 3, "#35464f");
+      }
+    } else if (type === "cap") {
+      rect(g, -8, -5, 16, 11, "#543752");
+      rect(g, -6, -7, 12, 15, "#543752");
+      rect(g, -6, -5, 12, 10, "#db738c");
+      rect(g, -4, -4, 8, 6, "#f3a7ac");
+      for (let i = -6; i <= 6; i += 4) {
+        rect(g, i, 4, 2, 3, "#a1476b");
+      }
+    } else {
+      const glass = type === "glass";
+      const edge = glass ? "#365c4c" : "#385c79";
+      const body = glass ? "#85b99a" : "#99c8db";
+      rect(g, -13, -6, 20, 13, edge);
+      rect(g, 6, -4, 6, 9, edge);
+      rect(g, 11, -3, 5, 7, edge);
+      rect(g, -11, -4, 17, 9, body);
+      rect(g, 6, -2, 6, 5, body);
+      rect(g, -9, -3, 3, 7, glass ? "#bedec2" : "#e1f4ef");
+      rect(g, -3, -4, 6, 9, glass ? "#9da87c" : "#dfd7b5");
+      rect(g, 13, -2, 2, 5, "#223944");
+    }
+    g.restore();
+  }
+
+  function crab(g, x, y, type = "good", scale = 1, phase = 0) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+    const step = Math.sin(phase) > 0 ? 1 : -1;
+    rect(g, -11, 7, 22, 3, "rgba(27,38,42,.22)");
+    rect(g, -10, 1 + step, 5, 2, "#a94f44");
+    rect(g, 5, 1 - step, 5, 2, "#a94f44");
+    rect(g, -10, 5 - step, 5, 2, "#e68562");
+    rect(g, 5, 5 + step, 5, 2, "#e68562");
+    rect(g, -6, 0, 12, 8, "#ce6655");
+    shell(g, 0, -4, type);
+    rect(g, -6, 5, 12, 4, "#ef9d72");
+    rect(g, -5, 3, 2, 4, "#513e40");
+    rect(g, 3, 3, 2, 4, "#513e40");
+    rect(g, -5, 3, 1, 1, "#fff2c6");
+    rect(g, 3, 3, 1, 1, "#fff2c6");
+    g.restore();
+  }
+
+  function person(g, x, y, scale = 1, volunteer = true) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+    rect(g, -7, 11, 17, 3, "rgba(20,35,39,.22)");
+    rect(g, -4, 3, 3, 9, "#344f66");
+    rect(g, 2, 3, 3, 9, "#344f66");
+    rect(g, -6, -7, 12, 12, volunteer ? "#6aaa8a" : "#ce8a92");
+    rect(g, -4, -14, 8, 8, "#eac299");
+    rect(g, -6, -15, 12, 3, "#e4d499");
+    rect(g, -8, -12, 16, 2, "#b7a66d");
+    rect(g, 6, -3, 3, 7, "#eac299");
+    if (volunteer) rect(g, 8, 1, 8, 12, "#3e5965");
+    g.restore();
+  }
+
+  function bird(g, x, y, scale = 1) {
+    g.save();
+    g.translate(x, y);
+    g.scale(scale, scale);
+    rect(g, -22, -3, 16, 5, "#344451");
+    rect(g, 6, -3, 16, 5, "#344451");
+    rect(g, -15, 0, 30, 4, "#d3d9ce");
+    rect(g, -5, -7, 10, 16, "#f0eee0");
+    rect(g, -3, 8, 6, 5, "#e1b76f");
+    rect(g, -2, 3, 1, 2, "#24313d");
+    rect(g, 2, 3, 1, 2, "#24313d");
+    g.restore();
+  }
+
+  function boot(g, x, y, scale = 1, color = "#564b51") {
+    g.save();
+    g.translate(x, y);
+    g.scale(scale, scale);
+    rect(g, -12, -25, 25, 46, color);
+    rect(g, -17, -18, 34, 26, color);
+    rect(g, -8, 21, 18, 7, color);
+    rect(g, -10, -17, 20, 3, "#8c7d7d");
+    rect(g, -10, -8, 20, 3, "#8c7d7d");
+    rect(g, -9, 2, 18, 3, "#8c7d7d");
+    g.restore();
+  }
+
+  function coral(g, x, y, color, scale = 1) {
+    rect(g, x - 2 * scale, y - 9 * scale, 4 * scale, 14 * scale, color);
+    rect(g, x - 8 * scale, y - 6 * scale, 7 * scale, 3 * scale, color);
+    rect(g, x + 1 * scale, y - 3 * scale, 8 * scale, 3 * scale, color);
+    rect(g, x - 8 * scale, y - 11 * scale, 3 * scale, 7 * scale, color);
+    rect(g, x + 6 * scale, y - 8 * scale, 3 * scale, 7 * scale, color);
+  }
+
+  function shore(y) {
+    return (S.level === 2 ? 433 : 475) + Math.sin(y / 67) * 26;
+  }
+
+  function walkable(x, y) {
+    return x >= 14 && y >= 18 && y <= MH - 18 &&
+      x <= shore(y) + 22 &&
+      !S.rocks.some(o => Math.hypot(x - o.x, y - o.y) < o.r + 7);
+  }
+
+  function makeState() {
+    return {
+      mode: "title", level: 0, hp: RULES.maxHp, home: "good",
+      t: 0, seed: Math.floor(Math.random() * 10000),
+      p: { x: 100, y: 216 }, items: [], rocks: [], debris: [],
+      friends: [], stomps: [], footTimes: [], footIndex: 0,
+      message: "", messageUntil: 0, hurtFlash: 0,
+      stride: 0, background: null
+    };
+  }
+
+  function makeGround() {
+    const bg = document.createElement("canvas");
+    bg.width = MW; bg.height = MH;
+    const g = bg.getContext("2d");
+    const p = LEVELS[S.level].palette;
+
+    for (let y = 0; y < MH; y += 16) {
+      for (let x = 0; x < MW; x += 16) {
+        const coast = shore(y);
+        const land = x < coast;
+        const c = land ? p[0] : x < coast + 34 ? p[2] : p[3];
+        rect(g, x, y, 16, 16, c);
+        const n = noise(x, y, S.seed);
+        if (land) {
+          rect(g, x + n * 11, y + n * 9, 2, 2, p[1]);
+          if (n > .7) rect(g, x + 3, y + 10, 3, 1, "#a99e7f");
+        } else if (n > .5) {
+          rect(g, x + 2, y + 8, 9, 1, p[2]);
+        }
+      }
+      rect(g, shore(y), y, 5, 12, p[4]);
+    }
+
+    for (let i = 0; i < 28; i++) {
+      const y = 25 + noise(i, 3, S.seed) * (MH - 50);
+      const x = shore(y) - 55 + noise(i, 9, S.seed) * 34;
+      const c = S.level === 2 ? "#b0b4aa" : i % 2 ? "#e7998e" : "#79ac91";
+      coral(g, x, y, c);
+    }
+    for (const rock of S.rocks) {
+      rect(g, rock.x - rock.r, rock.y - 8, rock.r * 2, 16, "#687c7c");
+      rect(g, rock.x - rock.r + 3, rock.y - 12, rock.r * 2 - 6, 18, "#85958b");
+      rect(g, rock.x - 5, rock.y - 10, 9, 3, "#a8b6a0");
+    }
+    S.background = bg;
+  }
+
+  function buildLevel(index) {
+    S.level = index;
+    S.t = 0;
+    S.p = { x: 100, y: 216 };
+    S.stride = 0;
+    S.hurtFlash = 0;
+    S.items = [];
+    S.stomps = [];
+    S.footIndex = 0;
+    S.message = "";
+    S.messageUntil = 0;
+    S.rocks = [
+      { x: 212, y: 113, r: 15 },
+      { x: 326, y: 282, r: 20 },
+      { x: 167, y: 351, r: 16 },
+      { x: 388, y: 66, r: 14 },
+      { x: 79, y: 85, r: 15 },
+      { x: 404, y: 365, r: 17 }
+    ];
+    S.footTimes = index === 1
+      ? [rand(2.5, 4), rand(7.5, 9), rand(14.5, 16)]
+      : [];
+
+    const slots = [];
+    for (let y = 42; y < MH - 25; y += 46) {
+      for (let x = 42; x < 485; x += 46) {
+        const pos = { x: x + rand(-6, 6), y: y + rand(-6, 6) };
+        if (walkable(pos.x, pos.y) && distance(pos, S.p) > 28) slots.push(pos);
+      }
+    }
+    for (let i = slots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
+    }
+    LEVELS[index].types.forEach((type, id) => {
+      const pos = slots.pop();
+      if (pos) S.items.push({ ...pos, id, type });
+    });
+
+    S.debris = Array.from({ length: LEVELS[index].debris }, (_, i) => ({
+      x: 24 + noise(i, 14, S.seed) * 385,
+      y: 25 + noise(i, 16, S.seed) * (MH - 50),
+      color: ["#d2d4c5", "#a7b9c5", "#b27e91", "#6f7886"][i % 4],
+      shape: i % 3
+    }));
+    S.friends = Array.from({ length: LEVELS[index].friends }, (_, i) => ({
+      x: 60 + noise(i, 21, S.seed) * 350,
+      y: 45 + noise(i, 24, S.seed) * (MH - 90)
+    }));
+    makeGround();
+  }
+
+  function drawStory(kind, index) {
+    const g = artCtx;
+    const palette = LEVELS[index].palette;
+    g.clearRect(0, 0, 384, 152);
+
+    for (let y = 0; y < 152; y += 8) {
+      const coast = 268 + Math.sin(y / 28) * 17;
+      for (let x = 0; x < 384; x += 8) {
+        rect(g, x, y, 8, 8,
+          x < coast ? palette[0] : x < coast + 24 ? palette[2] : palette[3]);
+        if (x < coast && noise(x, y, index) > .7) {
+          rect(g, x + 2, y + 3, 2, 1, palette[1]);
+        }
+      }
+      rect(g, coast, y, 3, 6, palette[4]);
+    }
+
+    for (let i = 0; i < 8; i++) {
+      const x = 18 + i * 32;
+      const y = 124 + (i % 3) * 6;
+      coral(g, x, y, index === 2 ? "#a6aaa0" : "#db9b91");
+    }
+    const dirty = index === 1 ? 22 : index === 2 ? 32 : 0;
+    for (let i = 0; i < dirty; i++) {
+      const x = 20 + noise(i, 71) * 235;
+      const y = 20 + noise(i, 72) * 110;
+      rect(g, x, y, 5, 3, i % 2 ? "#b18e9c" : "#d2d7cd");
+    }
+
+    if (kind === "trap") {
+      shell(g, 184, 75, S.home === "glass" ? "glass" : "plastic", 5.5);
+      g.save();
+      g.globalAlpha = .55;
+      crab(g, 162, 82, "bad", 1.3);
+      g.restore();
+      for (let i = 0; i < 3; i++) {
+        crab(g, 294 + i * 24, 51 + i * 33, "bad", 1.3);
+      }
+      for (let i = 0; i < 15; i++) {
+        rect(g, 259 + i * 5, 76 + Math.sin(i * .65) * 15, 2, 2, "#f2dca2");
+      }
+    } else if (kind === "win") {
+      for (let i = 0; i < 9; i++) {
+        crab(g, 57 + (i % 5) * 43, 64 + Math.floor(i / 5) * 43, "good", 1.4, i);
+      }
+      person(g, 291, 43, 1.4);
+      person(g, 325, 116, 1.2);
+      crab(g, 182, 84, "good", 2.6);
+    } else if (kind === "foot") {
+      crab(g, 134, 108, "bad", 2.1);
+      g.save();
+      g.globalAlpha = .9;
+      boot(g, 195, 67, 2.1);
+      g.restore();
+    } else if (kind === "micro") {
+      crab(g, 160, 90, "bad", 2.8);
+      for (let i = 0; i < 50; i++) {
+        rect(g, 20 + noise(i, 31) * 330, 10 + noise(i, 32) * 130,
+          2, 2, i % 2 ? "#ca99b6" : "#a4bdc2");
+      }
+    } else if (kind === "predator") {
+      crab(g, 149, 102, S.home, 2.5);
+      bird(g, 200, 49, 2.4);
+    } else if (kind === "bottle") {
+      shell(g, 220, 75, S.home, 3.4);
+      crab(g, 122, 100, "good", 2);
+    } else {
+      for (let i = 0; i < 6; i++) {
+        const type = index === 1
+          ? ["cap", "plastic", "good"][i % 3]
+          : index === 2 && i % 2 ? "bad" : "good";
+        shell(g, 42 + i * 36, 45 + (i % 2) * 47, type, 1.3);
+      }
+      crab(g, 165, 89, kind === "safe" ? "good" : S.home, 2.7);
+      if (index === 1) {
+        person(g, 77, 34, 1.1, false);
+        person(g, 258, 111, 1.3, false);
+      }
+      if (index === 3) {
+        person(g, 62, 53, 1.4);
+        person(g, 265, 101, 1.4);
+        crab(g, 220, 117, "good", 1.3);
+        crab(g, 109, 122, "good", 1.2);
+      }
+    }
+
+    if (kind === "safe" || kind === "bottle" || kind === "predator") {
+      rect(g, 0, 0, 384, 152, "rgba(18,29,61,.24)");
+      rect(g, 327, 21, 14, 14, "#fff0b8");
+      rect(g, 323, 18, 12, 13, palette[3]);
+      if (kind === "safe") {
+        g.fillStyle = "#fff0ce";
+        g.font = "12px monospace";
+        g.fillText("z Z", 191, 52);
+      }
+    }
+    art.setAttribute("aria-label", "海岸像素插畫");
+  }
+
+  function showModal({ tag, title, text, quote = "", kind = "intro",
+    button = "繼續", action }) {
+    clearInput();
+    $("sceneEyebrow").textContent = tag;
+    $("sceneTitle").textContent = title;
+    $("sceneText").textContent = text;
+    $("sceneQuote").textContent = quote;
+    $("sceneQuote").hidden = !quote;
+    $("next").textContent = button;
+    nextAction = action;
+    drawStory(kind, S.level);
+    $("overlay").hidden = false;
+    $("next").focus({ preventScroll: true });
+  }
+
+  function hideModal() {
+    $("overlay").hidden = true;
+    nextAction = null;
+    clearInput();
+    canvas.focus({ preventScroll: true });
+  }
+
+  $("next").addEventListener("click", () => {
+    const action = nextAction;
+    nextAction = null;
+    if (action) action();
+  });
+
+  function say(text, seconds = 2.6) {
+    S.message = text;
+    S.messageUntil = S.t + seconds;
+  }
+
+  function newGame() {
+    S = makeState();
+    introduce(0);
+  }
+
+  function introduce(index) {
+    buildLevel(index);
+    S.mode = "intro";
+    const L = LEVELS[index];
+    showModal({
+      tag: L.tag,
+      title: L.name,
+      text: `${L.intro}\n\n${L.mission}\n前 15 秒換殼，第 20 秒入夜；按下按鈕才開始計時。`,
+      button: "進入海岸",
+      action: beginLevel
+    });
+    updateHud();
+  }
+
+  function beginLevel() {
+    hideModal();
+    S.mode = "play";
+    S.t = 0;
+    say("尋找一個可以安心度過今晚的家。");
+    if (S.level === 2) {
+      damage(1, "micro");
+    }
+    updateHud();
+  }
+
+  function nearestItem() {
+    let selected = null;
+    let best = RULES.reach;
+    for (const item of S.items) {
+      const d = distance(item, S.p);
+      if (d < best) { selected = item; best = d; }
+    }
+    return selected;
+  }
+
+  function swapHome() {
+    if (S.mode !== "play") return;
+    if (S.t >= RULES.swapUntil) {
+      say("換殼時間已結束。仍可移動，等待入夜。");
+      return;
+    }
+    const item = nearestItem();
+    if (!item) {
+      say("再靠近一點：走到寄居物旁，再按 E 換殼。");
+      return;
+    }
+    const oldHome = S.home;
+    S.home = item.type;
+    item.type = oldHome;
+    say(`換上${INFO[S.home].name}。${INFO[S.home].tip}。`);
+    updateHud();
+  }
+
+  function damage(amount, cause) {
+    if (S.mode === "end") return false;
+    S.hp = Math.max(0, S.hp - amount);
+    S.hurtFlash = .5;
+    const message = {
+      foot: "被踩中了！生命 −1。",
+      micro: "微塑膠污染：本關開始，生命 −1。（遊戲化設定）",
+      predator: "不安全的寄居物沒能擋住天敵。生命 −1。"
+    };
+    say(message[cause] || "生命值減少。", 3.5);
+    if (S.hp === 0) {
+      endGame(cause);
+      return false;
+    }
+    return true;
+  }
+
+  function finishDay() {
+    if (S.mode !== "play") return;
+    S.mode = "night";
+    clearInput();
+
+    let title, text, kind;
+    if (S.home === "good") {
+      S.home = "bad";
+      title = "今晚，潮聲很溫柔";
+      kind = "safe";
+      text = "天然貝殼替我擋住了危險，我平安度過一天。\n醒來時，殼上卻多了裂紋。天然貝殼（好）已變成天然貝殼（壞）。";
+    } else if (S.home === "bad" || S.home === "cap") {
+      if (!damage(1, "predator")) return;
+      title = "這個家，還不夠安全";
+      kind = "predator";
+      text = "夜裡，天敵靠近了。\n我雖然逃過一劫，卻失去了 1 點生命。明天，必須找到更安全的殼。";
+    } else {
+      if (Math.random() < RULES.bottleTrapChance) {
+        S.hp = 0;
+        endGame("trap");
+        return;
+      }
+      title = "這一次，我找到了出口";
+      kind = "bottle";
+      text = "瓶子讓我暫時避過了天敵。\n幸好，這一次我沒有受困，生命值沒有減少。但它仍不是可以安心依靠的家。";
+    }
+
+    showModal({
+      tag: `第 ${S.level + 1} 天 · 夜晚結算`,
+      title,
+      text: `${text}\n\n剩餘生命：${S.hp}／${RULES.maxHp}`,
+      kind,
+      button: S.level === 3 ? "迎向明天" : "前往下一段海岸",
+      action: () => {
+        if (S.level === 3) endGame("win");
+        else introduce(S.level + 1);
+      }
+    });
+    updateHud();
+  }
+
+  function endGame(key) {
+    if (S.mode === "end") return;
+    if (key !== "win") S.hp = 0;
+    S.mode = "end";
+    clearInput();
+    unlocked.add(key);
+    try {
+      localStorage.setItem("sdg14-crab-endings", JSON.stringify([...unlocked]));
+    } catch {}
+    drawGallery();
+    const ending = ENDINGS[key];
+    showModal({
+      tag: `旅程終章 · 已發現 ${unlocked.size}／5 種結局`,
+      title: ending.name,
+      text: ending.text,
+      quote: ending.quote,
+      kind: ending.kind,
+      button: "重新出發",
+      action: newGame
+    });
+    updateHud();
+  }
+
+  function togglePause() {
+    if (S.mode === "play") {
+      S.mode = "pause";
+      showModal({
+        tag: "潮水暫時停在這裡",
+        title: "旅程已暫停",
+        text: "時間、踩踏預警與生命值都已暫停。\n準備好後，再陪牠走一段。",
+        kind: "intro",
+        button: "繼續旅程",
+        action: () => {
+          hideModal();
+          S.mode = "play";
+          updateHud();
+        }
+      });
+    } else if (S.mode === "pause") {
+      hideModal();
+      S.mode = "play";
+    }
+    updateHud();
+  }
+
+  function drawGallery() {
+    $("gallery").replaceChildren();
+    for (const [key, ending] of Object.entries(ENDINGS)) {
+      const badge = document.createElement("span");
+      badge.className = `badge${unlocked.has(key) ? " unlocked" : ""}`;
+      badge.textContent = unlocked.has(key)
+        ? `✓ ${ending.name.split("｜")[1]}`
+        : `？ ${key === "win" ? "好結局" : ending.name.split("｜")[0]}`;
+      $("gallery").append(badge);
+    }
+    $("collectionTitle").textContent = `結局圖鑑 · ${unlocked.size}／5`;
+  }
+
+  function updateHud() {
+    setText("chapter", `${S.level + 1}／4　${LEVELS[S.level].name}`);
+    setText("hearts", "♥".repeat(S.hp) + "♡".repeat(RULES.maxHp - S.hp));
+    $("hearts").setAttribute("aria-label", `生命值 ${S.hp}，上限 ${RULES.maxHp}`);
+    setText("home", INFO[S.home].name);
+
+    const locked = S.t >= RULES.swapUntil;
+    $("clock").dataset.locked = String(locked);
+    if (S.mode === "play" || S.mode === "pause") {
+      setText("clock", locked
+        ? `${Math.max(0, Math.ceil(RULES.dayDuration - S.t))} 秒後入夜`
+        : `${Math.ceil(RULES.swapUntil - S.t)} 秒可換殼`);
+    } else {
+      setText("clock", S.mode === "night" || S.mode === "end" ? "本日結束" : "等待出發");
+    }
+
+    $("progress").style.width = `${Math.min(100, S.t / RULES.dayDuration * 100)}%`;
+    $("progress").style.background = locked ? "#e8bc7b" : "#92e0ba";
+    $("pause").disabled = !["play", "pause"].includes(S.mode);
+    setText("pause", S.mode === "pause" ? "繼續 P" : "暫停 P");
+    $("swap").disabled = S.mode !== "play" || S.t >= RULES.swapUntil;
+
+    let hintText = S.t > S.messageUntil ? "" : S.message;
+    if (!hintText && S.mode === "play") {
+      if (S.t < RULES.swapUntil) {
+        const item = nearestItem();
+        hintText = item
+          ? `靠近 ${INFO[item.type].name}：按下 E 或空白鍵換殼。`
+          : "使用 WASD 或方向鍵移動，靠近地上的寄居物。";
+      } else {
+        hintText = "換殼時間已鎖定。移動避險，等待入夜結算。";
+      }
+    }
+    setText("hint", hintText);
+  }
+
+  function update(dt) {
+    if (S.mode !== "play") return;
+    S.t += dt;
+
+    if (S.level === 1 && S.footIndex < S.footTimes.length && S.t >= S.footTimes[S.footIndex]) {
+      const target = { x: S.p.x + rand(-32, 32), y: S.p.y + rand(-32, 32) };
+      S.stomps.push({
+        x: target.x, y: target.y,
+        timer: 0,
+        maxTime: RULES.footDelay + 0.6
+      });
+      S.footIndex++;
+      say("地面震動！巨大腳步即將落下！", 1.5);
+    }
+
+    for (let i = S.stomps.length - 1; i >= 0; i--) {
+      const s = S.stomps[i];
+      s.timer += dt;
+      if (s.timer >= RULES.footDelay && !s.hit && s.timer < RULES.footDelay + 0.2) {
+        s.hit = true;
+        if (distance(S.p, s) < 26) {
+          if (!damage(1, "foot")) return;
+        }
+      }
+      if (s.timer >= s.maxTime) {
+        S.stomps.splice(i, 1);
+      }
+    }
+
+    if (S.hurtFlash > 0) S.hurtFlash = Math.max(0, S.hurtFlash - dt);
+
+    let dx = 0, dy = 0;
+    if (keys.has("ArrowUp") || keys.has("KeyW")) dy -= 1;
+    if (keys.has("ArrowDown") || keys.has("KeyS")) dy += 1;
+    if (keys.has("ArrowLeft") || keys.has("KeyA")) dx -= 1;
+    if (keys.has("ArrowRight") || keys.has("KeyD")) dx += 1;
+
+    if (dx !== 0 && dy !== 0) {
+      dx *= 0.7071;
+      dy *= 0.7071;
+    }
+
+    if (dx !== 0 || dy !== 0) {
+      S.stride += dt * 9;
+      const nextX = clamp(S.p.x + dx * RULES.speed * dt, 20, MW - 20);
+      const nextY = clamp(S.p.y + dy * RULES.speed * dt, 24, MH - 24);
+      if (walkable(nextX, S.p.y)) S.p.x = nextX;
+      if (walkable(S.p.x, nextY)) S.p.y = nextY;
+    }
+
+    if (S.t >= RULES.dayDuration) {
+      finishDay();
+    }
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    const camX = clamp(S.p.x - W / 2, 0, MW - W);
+    const camY = clamp(S.p.y - H / 2, 0, MH - H);
+    ctx.translate(-Math.round(camX), -Math.round(camY));
+
+    if (S.background) ctx.drawImage(S.background, 0, 0);
+
+    for (const debris of S.debris) {
+      rect(ctx, debris.x, debris.y, 4, 3, debris.color);
+    }
+
+    for (const friend of S.friends) {
+      crab(ctx, friend.x, friend.y, "good", 1, friend.x);
+    }
+
+    for (const item of S.items) {
+      shell(ctx, item.x, item.y, item.type, 1);
+    }
+
+    for (const s of S.stomps) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      if (s.timer < RULES.footDelay) {
+        ctx.strokeStyle = "#fa8e81";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 24 * (1 - s.timer / RULES.footDelay), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = "rgba(250,142,129,0.2)";
+        ctx.fill();
+      } else {
+        ctx.globalAlpha = 0.85;
+        boot(ctx, 0, -10, 1.4);
+      }
+      ctx.restore();
+    }
+
+    const nearest = nearestItem();
+    if (nearest && S.t < RULES.swapUntil && S.mode === "play") {
+      ctx.strokeStyle = "#92e0ba";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(nearest.x, nearest.y, 14 + Math.sin(Date.now() / 120) * 2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    crab(ctx, S.p.x, S.p.y, S.home, 1.2, S.stride);
+
+    if (S.hurtFlash > 0) {
+      ctx.fillStyle = "rgba(250,142,129,0.35)";
+      ctx.fillRect(camX, camY, W, H);
+    }
+
+    ctx.restore();
+  }
+
+  let lastTime = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.1, (now - lastTime) / 1000);
+    lastTime = now;
+    update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("keydown", e => {
+    if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code) || e.key === " ") {
+      if (document.activeElement === canvas || document.activeElement.tagName === "BODY") {
+        e.preventDefault();
+      }
+    }
+    if (e.code === "KeyP" || e.key === "p" || e.key === "P") {
+      if (!["title", "intro", "end"].includes(S.mode)) {
+        togglePause();
+        return;
+      }
+    }
+    if (e.code === "KeyE" || e.code === "Space" || e.key === " " || e.key === "e" || e.key === "E") {
+      if (S.mode === "play") {
+        swapHome();
+        return;
+      }
+    }
+    keys.add(e.code);
+  });
+
+  window.addEventListener("keyup", e => {
+    keys.delete(e.code);
+  });
+
+  window.addEventListener("blur", () => {
+    if (S.mode === "play") togglePause();
+  });
+
+  $("pause").addEventListener("click", () => {
+    if (!["title", "intro", "end"].includes(S.mode)) togglePause();
+  });
+
+  $("swap").addEventListener("click", () => {
+    swapHome();
+  });
+
+  document.querySelectorAll(".dpad button").forEach(btn => {
+    const k = btn.dataset.key;
+    btn.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      keys.add(k);
+      btn.setPointerCapture(e.pointerId);
+    });
+    btn.addEventListener("pointerup", () => keys.delete(k));
+    btn.addEventListener("pointercancel", () => keys.delete(k));
+  });
+
+  drawGallery();
+  newGame();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
