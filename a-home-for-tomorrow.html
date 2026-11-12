@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>借一個明天｜SDG 14 寄居蟹的尋殼旅程</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #101e2b;
+    --panel: #192d3b;
+    --line: #365162;
+    --cream: #f8ebcb;
+    --muted: #a9bec6;
+    --mint: #92e0ba;
+    --coral: #fa8e81;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    padding: 24px 14px 36px;
+    background: radial-gradient(ellipse at top, #244a56 0, transparent 65%), var(--bg);
+    color: var(--cream);
+    font-family: ui-monospace, "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  }
+  html[lang="zh-Hans"] body {
+    font-family: ui-monospace, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  }
+  html[lang="en"] body {
+    font-family: ui-monospace, "Courier New", monospace;
+  }
+  main { width: min(100%, 1000px); margin: auto; }
+  header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .heading { flex: 1 1 300px; min-width: 0; }
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow {
+    color: var(--mint);
+    font-size: 11px;
+    letter-spacing: .12em;
+    margin: 0 0 7px;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(25px, 5vw, 38px);
+    letter-spacing: .05em;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 8px 0 0;
+  }
+  button, select { font: inherit; }
+  button {
+    color: var(--cream);
+    background: #284553;
+    border: 2px solid #54737d;
+    border-radius: 3px;
+    padding: 10px 16px;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #0b1821;
+    touch-action: manipulation;
+  }
+  button:hover { background: #355b69; }
+  button:active { transform: translateY(2px); box-shadow: none; }
+  button:focus-visible, select:focus-visible {
+    outline: 3px solid var(--mint);
+    outline-offset: 3px;
+  }
+  button:disabled { opacity: .4; cursor: default; }
+  .primary {
+    color: #132c2a;
+    background: var(--mint);
+    border-color: #c6f1d9;
+    font-weight: bold;
+  }
+  .primary:hover { background: #b0edcb; }
+  .language-picker {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .language-picker select {
+    max-width: 100%;
+    min-height: 40px;
+    padding: 8px;
+    border: 2px solid #54737d;
+    border-radius: 3px;
+    background: #203c4b;
+    color: var(--cream);
+    cursor: pointer;
+  }
+  #hud {
+    display: grid;
+    grid-template-columns: 1.1fr .65fr 1.25fr .8fr;
+    border: 2px solid var(--line);
+    background: #142733;
+  }
+  .hud-cell {
+    min-width: 0;
+    padding: 12px 14px;
+    border-right: 1px solid var(--line);
+  }
+  .hud-cell:last-child { border-right: 0; }
+  .label {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+  .value {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  #hearts { color: var(--coral); letter-spacing: 5px; font-size: 20px; }
+  #clock { color: var(--mint); }
+  #clock[data-locked="true"] { color: #ffd38a; }
+  #timeline { height: 6px; background: #0c1720; position: relative; }
+  #timeline::after {
+    content: "";
+    position: absolute;
+    left: 75%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #f8ebcb;
+  }
+  #progress { height: 100%; width: 0; background: var(--mint); }
+  #frame {
+    position: relative;
+    border: 2px solid var(--line);
+    border-top: 0;
+    background: #102733;
+    overflow: hidden;
+  }
+  #world {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    outline: none;
+  }
+  #overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    overflow: auto;
+    padding: 14px;
+    background: rgba(7, 16, 26, .84);
+  }
+  .dialog {
+    width: min(100%, 590px);
+    margin: auto;
+    padding: 18px;
+    border: 2px solid #75908e;
+    background: #172c37;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, .28);
+  }
+  .dialog .language-picker { justify-content: flex-end; margin-bottom: 14px; }
+  #sceneTitle { font-size: 23px; margin: 0 0 12px; overflow-wrap: break-word; }
+  #sceneArt {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #24444d;
+    border: 2px solid #0b1c25;
+    image-rendering: pixelated;
+  }
+  #sceneText {
+    font-size: 14px;
+    line-height: 1.85;
+    white-space: pre-line;
+    margin: 13px 0;
+  }
+  #sceneQuote {
+    border-left: 3px solid var(--mint);
+    padding-left: 12px;
+    color: #bce8cf;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  #next { width: 100%; margin-top: 5px; }
+  #hint {
+    min-height: 51px;
+    margin: 0;
+    padding: 13px 15px;
+    background: var(--panel);
+    border: 2px solid var(--line);
+    border-top: 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 0;
+  }
+  .keyboard { color: var(--muted); font-size: 12px; line-height: 1.8; }
+  kbd {
+    background: #28404d;
+    border: 1px solid #4b626d;
+    border-bottom-width: 3px;
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+  .touch-controls { display: flex; align-items: center; gap: 20px; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 40px); gap: 4px; }
+  .dpad button {
+    height: 37px;
+    padding: 0;
+    touch-action: none;
+    user-select: none;
+  }
+  .dpad [data-key="ArrowUp"] { grid-column: 2; }
+  .dpad [data-key="ArrowLeft"] { grid-column: 1; grid-row: 2; }
+  .dpad [data-key="ArrowDown"] { grid-column: 2; grid-row: 2; }
+  .dpad [data-key="ArrowRight"] { grid-column: 3; grid-row: 2; }
+  #swap { min-height: 66px; color: var(--mint); }
+  .collection {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid var(--line);
+    background: rgba(25, 45, 59, .65);
+  }
+  .collection-title { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  #gallery { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge {
+    padding: 7px 9px;
+    color: #738b99;
+    background: #11232f;
+    border: 1px solid #304754;
+    font-size: 11px;
+  }
+  .badge.unlocked { color: var(--mint); border-color: #73a591; }
+  details {
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.9;
+  }
+  summary { cursor: pointer; color: var(--cream); }
+  details li { margin-bottom: 6px; }
+  .note { color: #d7c6a0; }
+  @media (max-width: 620px) {
+    body { padding: 14px 8px 25px; }
+    .header-actions { width: 100%; justify-content: space-between; }
+    #hud { grid-template-columns: 1fr 1fr; }
+    .hud-cell { padding: 9px 11px; }
+    .hud-cell:nth-child(2) { border-right: 0; }
+    .hud-cell:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .value { font-size: 12px; }
+    #overlay { position: fixed; padding: 14px; }
+    .dialog { padding: 14px; }
+    #sceneTitle { font-size: 21px; }
+    .controls { flex-wrap: wrap; justify-content: center; }
+    .keyboard { width: 100%; text-align: center; }
+    .touch-controls { width: 100%; justify-content: space-between; padding: 0 12px; }
+  }
+</style>
+<script>
+(function () {
+  var errors = [];
+
+  function displayErrors() {
+    if (!document.body || errors.length === 0) return;
+
+    var box = document.getElementById("debug-error-box");
+
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "debug-error-box";
+
+      box.style.position = "fixed";
+      box.style.left = "10px";
+      box.style.right = "10px";
+      box.style.top = "10px";
+      box.style.zIndex = "99999";
+      box.style.maxHeight = "50vh";
+      box.style.overflow = "auto";
+      box.style.padding = "15px";
+      box.style.background = "#fff3f3";
+      box.style.color = "#8b0000";
+      box.style.border = "3px solid #d00000";
+      box.style.fontSize = "14px";
+      box.style.lineHeight = "1.6";
+      box.style.whiteSpace = "pre-wrap";
+      box.style.wordBreak = "break-word";
+
+      document.body.appendChild(box);
+    }
+
+    box.textContent =
+      "偵測到網頁程式錯誤，請截圖傳給我：\n\n" +
+      errors.join("\n\n");
+  }
+
+  window.addEventListener("error", function (event) {
+    var message = event.message || "未知錯誤";
+    var location = "";
+
+    if (event.lineno) {
+      location =
+        "\n位置：第 " + event.lineno +
+        " 行，第 " + event.colno + " 欄";
+    }
+
+    errors.push(message + location);
+    displayErrors();
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    displayErrors();
+
+    setTimeout(function () {
+      var title = document.querySelector('[data-i18n="gameTitle"]');
+
+      if (title && !title.textContent.trim() && errors.length === 0) {
+        errors.push(
+          "遊戲標題沒有初始化，但沒有捕捉到具體錯誤。" +
+          "\n請確認 GitHub 上的檔案是最新版本。"
+        );
+        displayErrors();
+      }
+    }, 5000);
+  });
+})();
+</script>
+</head>
+<body>
+<main>
+  <header>
+    <div class="heading">
+      <p class="eyebrow" data-i18n="headerTag"></p>
+      <h1 data-i18n="gameTitle"></h1>
+      <p class="subtitle" data-i18n="subtitle"></p>
+    </div>
+    <div class="header-actions">
+      <label class="language-picker">
+        <span data-i18n="language"></span>
+        <select class="language-select">
+          <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+          <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+          <option value="en" lang="en">English</option>
+        </select>
+      </label>
+      <button id="pause" type="button" disabled></button>
+    </div>
+  </header>
+
+  <section id="hud">
+    <div class="hud-cell">
+      <span class="label" data-i18n="currentShore"></span>
+      <span class="value" id="chapter"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label" data-i18n="health"></span>
+      <span class="value" id="hearts"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label" data-i18n="currentHome"></span>
+      <span class="value" id="home"></span>
+    </div>
+    <div class="hud-cell">
+      <span class="label" data-i18n="dayTimer"></span>
+      <span class="value" id="clock"></span>
+    </div>
+  </section>
+
+  <div id="timeline"><div id="progress"></div></div>
+
+  <section id="frame">
+    <canvas id="world" width="480" height="288" tabindex="0">此遊戲需要支援 Canvas 的瀏覽器。</canvas>
+    <div id="overlay" hidden>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="sceneTitle" aria-describedby="sceneText">
+        <label class="language-picker">
+          <span data-i18n="language"></span>
+          <select class="language-select">
+            <option value="zh-Hant" lang="zh-Hant">繁體中文</option>
+            <option value="zh-Hans" lang="zh-Hans">简体中文</option>
+            <option value="en" lang="en">English</option>
+          </select>
+        </label>
+        <p class="eyebrow" id="sceneEyebrow"></p>
+        <h2 id="sceneTitle"></h2>
+        <canvas id="sceneArt" width="384" height="152" role="img"></canvas>
+        <p id="sceneText"></p>
+        <p id="sceneQuote" hidden></p>
+        <button id="next" class="primary" type="button"></button>
+      </section>
+    </div>
+  </section>
+
+  <p id="hint" role="status" aria-live="polite"></p>
+
+  <div class="controls">
+    <div class="keyboard">
+      <kbd>WASD</kbd>／<kbd>↑↓←→</kbd> <span data-i18n="move"></span>&nbsp;
+      <kbd>E</kbd>／<kbd>Space</kbd> <span data-i18n="changeHome"></span>&nbsp;
+      <kbd>P</kbd> <span data-i18n="pauseWord"></span>
+    </div>
+    <div class="touch-controls">
+      <div class="dpad">
+        <button type="button" data-key="ArrowUp">▲</button>
+        <button type="button" data-key="ArrowLeft">◀</button>
+        <button type="button" data-key="ArrowDown">▼</button>
+        <button type="button" data-key="ArrowRight">▶</button>
+      </div>
+      <button id="swap" type="button"></button>
+    </div>
+  </div>
+
+  <section class="collection">
+    <div class="collection-title" id="collectionTitle"></div>
+    <div id="gallery"></div>
+  </section>
+
+  <details>
+    <summary data-i18n="rulesTitle"></summary>
+    <ul>
+      <li data-i18n="rule1"></li>
+      <li data-i18n="rule2"></li>
+      <li data-i18n="rule3"></li>
+      <li data-i18n="rule4"></li>
+      <li data-i18n="rule5"></li>
+      <li data-i18n="rule6"></li>
+      <li data-i18n="rule7"></li>
+      <li data-i18n="rule8"></li>
+      <li data-i18n="rule9"></li>
+      <li data-i18n="rule10"></li>
+    </ul>
+    <p class="note" data-i18n="scienceNote"></p>
+  </details>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const LANGUAGES = ["zh-Hant", "zh-Hans", "en"];
+
+  const TEXT = {
+    headerTag: ["SDG 14 · 像素海岸物語", "SDG 14 · 像素海岸物语", "SDG 14 · A PIXEL SHORE STORY"],
+    gameTitle: ["借一個明天", "借一个明天", "A Home for Tomorrow"],
+    subtitle: ["一隻寄居蟹，四段海岸，一個可以安心醒來的家。", "一只寄居蟹，四段海岸，一个可以安心醒来的家。", "One hermit crab. Four shores. A home to wake up safely in."],
+    language: ["語言", "语言", "Language"],
+    chooseLanguage: ["選擇語言", "选择语言", "Choose a language"],
+    currentShore: ["目前海岸", "当前海岸", "CURRENT SHORE"],
+    health: ["生命值", "生命值", "HEALTH"],
+    currentHome: ["目前寄居物", "当前寄居物", "CURRENT HOME"],
+    dayTimer: ["本日時間", "本日时间", "DAY TIMER"],
+    move: ["移動", "移动", "Move"],
+    changeHome: ["換殼", "换壳", "Change home"],
+    pauseWord: ["暫停", "暂停", "Pause"],
+    pauseButton: ["暫停 P", "暂停 P", "Pause P"],
+    resumeButton: ["繼續 P", "继续 P", "Resume P"],
+    swapButton: ["換殼 E", "换壳 E", "Change home E"],
+    up: ["向上", "向上", "Move up"],
+    down: ["向下", "向下", "Move down"],
+    left: ["向左", "向左", "Move left"],
+    right: ["向右", "向右", "Move right"],
+    gameStatus: ["遊戲狀態", "游戏状态", "Game status"],
+    gameView: ["遊戲畫面", "游戏画面", "Game view"],
+    touchControls: ["觸控操作", "触控操作", "Touch controls"],
+    canvasDescription: ["俯視海岸遊戲。方向鍵或 WASD 移動，E 或空白鍵換殼。", "俯视海岸游戏。方向键或 WASD 移动，E 或空格键换壳。", "Top-down coastal game. Move with arrow keys or WASD. Press E or Space to change homes."],
+    canvasFallback: ["此遊戲需要支援 Canvas 的瀏覽器。", "此游戏需要支持 Canvas 的浏览器。", "This game requires a browser that supports Canvas."],
+    begin: ["開始旅程", "开始旅程", "Begin the journey"],
+    enter: ["進入海岸", "进入海岸", "Enter the shore"],
+    nextShore: ["前往下一段海岸", "前往下一段海岸", "Continue to the next shore"],
+    welcomeTomorrow: ["迎向明天", "迎向明天", "Welcome tomorrow"],
+    restart: ["重新出發", "重新出发", "Start again"],
+    resumeJourney: ["繼續旅程", "继续旅程", "Resume the journey"],
+    waiting: ["等待出發", "等待出发", "Ready to begin"],
+    dayComplete: ["本日結束", "本日结束", "Day complete"],
+    gallery: ["結局圖鑑", "结局图鉴", "Ending Gallery"],
+    goodEnding: ["好結局", "好结局", "Good Ending"],
+    badEnding1: ["壞結局一", "坏结局一", "Bad Ending 1"],
+    badEnding2: ["壞結局二", "坏结局二", "Bad Ending 2"],
+    badEnding3: ["壞結局三", "坏结局三", "Bad Ending 3"],
+    badEnding4: ["壞結局四", "坏结局四", "Bad Ending 4"],
+    good: ["天然貝殼（好）", "天然贝壳（好）", "Natural shell (intact)"],
+    bad: ["天然貝殼（壞）", "天然贝壳（坏）", "Natural shell (damaged)"],
+    cap: ["瓶蓋", "瓶盖", "Bottle cap"],
+    plastic: ["塑膠瓶", "塑料瓶", "Plastic bottle"],
+    glass: ["玻璃瓶", "玻璃瓶", "Glass bottle"],
+    goodTip: ["本晚安全；翌日變成壞殼", "今晚安全；次日变成坏壳", "Safe tonight; becomes damaged tomorrow"],
+    badTip: ["本晚會被天敵攻擊，生命 −1", "今晚会被天敌攻击，生命 −1", "A predator attacks tonight: lose 1 health"],
+    bottleTip: ["避過天敵，但本晚有 50% 受困風險", "避过天敌，但今晚有 50% 的受困风险", "Avoid predators, but face a 50% risk of entrapment tonight"],
+    level1: ["原本的家", "原本的家", "The Original Home"],
+    level2: ["塑膠入侵", "塑料入侵", "Plastic Invasion"],
+    level3: ["微型危機", "微型危机", "Microscopic Threats"],
+    level4: ["淨灘與復甦", "净滩与复苏", "Clean-up & Recovery"],
+    level1Tag: ["第一關 · 尚未被改變的海岸", "第一关 · 尚未被改变的海岸", "CHAPTER 1 · AN UNTOUCHED SHORE"],
+    level2Tag: ["第二關 · 人潮退去以後", "第二关 · 人潮退去以后", "CHAPTER 2 · AFTER THE CROWDS"],
+    level3Tag: ["第三關 · 看不見的改變", "第三关 · 看不见的改变", "CHAPTER 3 · INVISIBLE CHANGES"],
+    level4Tag: ["最終關 · 被留下來的家", "最终关 · 被留下来的家", "FINAL CHAPTER · HOMES LEFT BEHIND"],
+    level1Intro: ["那時候，海浪帶來的，是貝殼。\n我背著一個小小的家，在潮池之間走動。明天，好像總會到來。", "那时候，海浪带来的，是贝壳。\n我背着一个小小的家，在潮池之间走动。明天，好像总会到来。", "Back then, the waves brought seashells.\nI carried my little home between the tide pools. Tomorrow always seemed certain."],
+    level2Intro: ["後來，海灘變得很熱鬧。\n鮮豔的東西越來越多，真正的殼卻越來越少。頭頂的影子，也不再只是雲。", "后来，海滩变得很热闹。\n鲜艳的东西越来越多，真正的壳却越来越少。头顶的影子，也不再只是云。", "Later, the beach grew crowded.\nBright objects multiplied, but real shells became scarce. The shadows overhead were no longer just clouds."],
+    level3Intro: ["我來到礁岸的潮池。\n有些殼看起來仍像從前，卻已經布滿裂紋。還有一些危險，小得幾乎看不見。", "我来到礁岸的潮池。\n有些壳看起来仍像从前，却已经布满裂纹。还有一些危险，小得几乎看不见。", "I reached the tide pools along the reef.\nSome shells still looked familiar, but cracks covered their surfaces. Other dangers were almost too small to see."],
+    level4Intro: ["再往前走，有人彎下身，把垃圾帶走。\n這一次，他們把天然空殼留在沙灘上。慢慢地，我又看見了其他寄居蟹。", "再往前走，有人弯下身，把垃圾带走。\n这一次，他们把天然空壳留在沙滩上。慢慢地，我又看见了其他寄居蟹。", "Further along the shore, people bent down to pick up litter.\nThis time, they left the empty natural shells on the sand. Little by little, I began to see other hermit crabs again."],
+    level1Mission: ["熟悉移動與換殼。這裡的天然空殼全是好殼；靠近後按 E。", "熟悉移动与换壳。这里的天然空壳全是好壳；靠近后按 E。", "Practise moving and changing homes. All the empty natural shells here are intact. Approach one and press E."],
+    level2Mission: ["尋找少量好殼。共有 3 次隨機踩踏：腳印預警出現 1 秒後踩下，命中扣 1 點生命。", "寻找少量好壳。共有 3 次随机踩踏：脚印预警出现 1 秒后踩下，命中扣 1 点生命。", "Find the few intact shells. Three random footsteps will strike. Each footprint gives a 1-second warning; getting hit costs 1 health."],
+    level3Mission: ["開始本關立即扣 1 點生命。初始 6 枚天然殼只有 3 枚是好殼，請辨認裂紋。", "开始本关立即扣 1 点生命。初始 6 枚天然壳只有 3 枚是好壳，请辨认裂纹。", "Lose 1 health immediately upon entering. Only 3 of the 6 initial natural shells are intact. Look carefully for cracks."],
+    level4Mission: ["這裡有大量好殼。生命不會自動恢復；請換上安全的天然貝殼，度過最後一晚。", "这里有大量好壳。生命不会自动恢复；请换上安全的天然贝壳，度过最后一晚。", "Intact shells are plentiful here. Health does not recover automatically. Find a safe natural shell for the final night."],
+    timingReminder: ["前 15 秒換殼，第 20 秒入夜；按下按鈕才開始計時。", "前 15 秒换壳，第 20 秒入夜；按下按钮才开始计时。", "Change homes during the first 15 seconds. Night falls at 20 seconds. The timer starts when you press the button."],
+    titleTag: ["SDG 14 · 一隻寄居蟹的尋殼旅程", "SDG 14 · 一只寄居蟹的寻壳旅程", "SDG 14 · A HERMIT CRAB'S SEARCH FOR A HOME"],
+    titleText: ["我不需要很大的世界。\n只需要一個可以躲進去，也可以走出來的家。\n\n四段海岸，三點生命。每關有 15 秒尋找寄居物，第 20 秒進入夜晚。", "我不需要很大的世界。\n只需要一个可以躲进去，也可以走出来的家。\n\n四段海岸，三点生命。每关有 15 秒寻找寄居物，第 20 秒进入夜晚。", "I do not need a very big world.\nJust a home I can hide inside—and find my way out of.\n\nFour shores. Three health points. Each chapter gives you 15 seconds to choose a home. Night falls at 20 seconds."],
+    titleQuote: ["有些東西看起來像家，卻沒有明天。", "有些东西看起来像家，却没有明天。", "Some things look like homes, but offer no tomorrow."],
+    findHome: ["尋找一個可以安心度過今晚的家。", "寻找一个可以安心度过今晚的家。", "Find a home that will keep you safe tonight."],
+    lockedMessage: ["換殼時間已結束。仍可移動，等待入夜。", "换壳时间已结束。仍可移动，等待入夜。", "Time to change homes has ended. You can still move while waiting for nightfall."],
+    moveCloser: ["再靠近一點：走到寄居物旁，再按 E 換殼。", "再靠近一点：走到寄居物旁，再按 E 换壳。", "Move closer to a shell or container, then press E to change homes."],
+    footDamage: ["被踩中了！生命 −1。", "被踩中了！生命 −1。", "You were stepped on! Lose 1 health."],
+    microDamage: ["微塑膠污染：本關開始，生命 −1。（遊戲化設定）", "微塑料污染：本关开始，生命 −1。（游戏化设定）", "Microplastic pollution: lose 1 health upon entering. (A gameplay abstraction.)"],
+    predatorDamage: ["不安全的寄居物沒能擋住天敵。生命 −1。", "不安全的寄居物没能挡住天敌。生命 −1。", "Your unsafe home could not protect you from predators. Lose 1 health."],
+    lockedHint: ["寄居物已鎖定。仍可移動避險，第 20 秒進入劇情。", "寄居物已锁定。仍可移动避险，第 20 秒进入剧情。", "Your home is locked in. Keep moving to avoid danger. The story continues at 20 seconds."],
+    exploreHint: ["探索海岸，尋找天然貝殼。小地圖的淡色點代表可用寄居物。", "探索海岸，寻找天然贝壳。小地图的浅色点代表可用寄居物。", "Explore the shore for natural shells. Pale dots on the minimap mark usable shells and containers."],
+    pausedHint: ["已暫停，計時不會繼續。", "已暂停，计时不会继续。", "Paused. The timer is stopped."],
+    endHint: ["每一個結局，都指向同一件事：海岸不只是人類的風景。", "每一个结局，都指向同一件事：海岸不只是人类的风景。", "Every ending carries the same message: the coast is more than scenery for people."],
+    readingHint: ["閱讀劇情後按下按鈕繼續；閱讀期間不計時。", "阅读剧情后按下按钮继续；阅读期间不计时。", "Read the story, then press the button to continue. The timer is stopped while you read."],
+    darker: ["潮色暗了下來。換殼時間結束，現在仍能移動避險。", "潮色暗了下来。换壳时间结束，现在仍能移动避险。", "The shore grows darker. You can no longer change homes, but you can still move away from danger."],
+    pauseTag: ["潮水暫時停在這裡", "潮水暂时停在这里", "THE TIDE CAN WAIT"],
+    pauseTitle: ["旅程已暫停", "旅程已暂停", "Journey paused"],
+    pauseText: ["時間、踩踏預警與生命值都已暫停。\n準備好後，再陪牠走一段。", "时间、踩踏预警与生命值都已暂停。\n准备好后，再陪它走一段。", "The timer, footstep warnings, and health changes are paused.\nWhen you are ready, walk a little further together."],
+    safeTitle: ["今晚，潮聲很溫柔", "今晚，潮声很温柔", "A gentle tide tonight"],
+    safeText: ["天然貝殼替我擋住了危險，我平安度過一天。\n醒來時，殼上卻多了裂紋。天然貝殼（好）已變成天然貝殼（壞）。", "天然贝壳替我挡住了危险，我平安度过一天。\n醒来时，壳上却多了裂纹。天然贝壳（好）已变成天然贝壳（坏）。", "My natural shell kept danger away. I survived another day.\nWhen I woke, cracks marked its surface. My intact natural shell had become damaged."],
+    predatorNightTitle: ["這個家，還不夠安全", "这个家，还不够安全", "This home was not safe enough"],
+    predatorNightText: ["夜裡，天敵靠近了。\n我雖然逃過一劫，卻失去了 1 點生命。明天，必須找到更安全的殼。", "夜里，天敌靠近了。\n我虽然逃过一劫，却失去了 1 点生命。明天，必须找到更安全的壳。", "During the night, a predator came close.\nI escaped, but lost 1 health. Tomorrow, I must find a safer shell."],
+    bottleNightTitle: ["這一次，我找到了出口", "这一次，我找到了出口", "This time, I found the way out"],
+    bottleNightText: ["瓶子讓我暫時避過了天敵。\n幸好，這一次我沒有受困，生命值沒有減少。但它仍不是可以安心依靠的家。", "瓶子让我暂时避过了天敌。\n幸好，这一次我没有受困，生命值没有减少。但它仍不是可以安心依靠的家。", "The bottle sheltered me from predators for a while.\nLuckily, I was not trapped this time and lost no health. But this was still not a home I could trust."],
+    winName: ["明天，仍有家", "明天，仍有家", "A Home for Tomorrow"],
+    winText: ["清晨的潮水退去，我醒了過來。\n海岸上有同伴，也有足夠的天然空殼。我終於不用把每一個明天，都交給運氣。", "清晨的潮水退去，我醒了过来。\n海岸上有同伴，也有足够的天然空壳。我终于不用把每一个明天，都交给运气。", "The morning tide receded, and I woke.\nThere were other crabs on the shore, and enough empty natural shells. At last, I no longer had to leave every tomorrow to chance."],
+    winQuote: ["帶走垃圾，留下天然空殼；讓海岸，也留下牠們的家。", "带走垃圾，留下天然空壳；让海岸，也留下它们的家。", "Take away the litter, leave the empty natural shells, and keep the coast a home for its wildlife."],
+    predatorName: ["擋不住的夜", "挡不住的夜", "No Shelter from the Night"],
+    predatorEndText: ["我把身體縮到最深的地方。\n可是，這個不合適的家，沒能擋住天敵。最後一點生命，消失在潮聲裡。", "我把身体缩到最深的地方。\n可是，这个不合适的家，没能挡住天敌。最后一点生命，消失在潮声里。", "I pulled my body as far inside as I could.\nBut this unsuitable home could not keep the predator out. My last health point vanished into the sound of the waves."],
+    predatorQuote: ["別把海岸上的天然空殼都帶走：你眼中的紀念品，可能是牠們的庇護所。", "别把海岸上的天然空壳都带走：你眼中的纪念品，可能是它们的庇护所。", "Leave natural shells on the shore. What looks like a souvenir to you may be shelter for another life."],
+    footName: ["巨大的腳步", "巨大的脚步", "A Giant Footstep"],
+    footText: ["影子落下來時，我已經來不及躲開。\n對遊客來說，只是沙灘上的一步；對我來說，卻是整段旅程的終點。", "影子落下来时，我已经来不及躲开。\n对游客来说，只是沙滩上的一步；对我来说，却是整段旅程的终点。", "By the time the shadow fell, it was too late to escape.\nFor the visitor, it was just one step on the sand. For me, it was the end of the journey."],
+    footQuote: ["親近海岸時放慢腳步，留意腳下的小生命。", "亲近海岸时放慢脚步，留意脚下的小生命。", "Slow down when visiting the coast, and watch for the small lives beneath your feet."],
+    microName: ["看不見的重量", "看不见的重量", "An Invisible Burden"],
+    microText: ["我仍然看得見前面的貝殼，卻再也走不到那裡。\n旅途中累積的傷害，與這次看不見的污染，耗盡了我最後的生命。", "我仍然看得见前面的贝壳，却再也走不到那里。\n旅途中累积的伤害，与这次看不见的污染，耗尽了我最后的生命。", "I could still see the shell ahead, but could no longer reach it.\nThe injuries I had carried through the journey, together with this invisible pollution, exhausted the last of my life."],
+    microQuote: ["保護海洋，不只清走看得見的垃圾，也要從源頭減少塑膠污染。", "保护海洋，不只清走看得见的垃圾，也要从源头减少塑料污染。", "Protecting the ocean means more than removing visible litter. Reduce plastic pollution at its source."],
+    trapName: ["沒有出口的家", "没有出口的家", "A Home with No Way Out"],
+    trapText: ["瓶子讓我躲過了天敵，卻沒有讓我走出去。\n找不到食物的日子被濃縮成最後一幕：我餓死在瓶內。死亡留下的化學訊號吸引其他寄居蟹前來，同一個瓶子，成了接連奪走生命的「集體陷阱」。", "瓶子让我躲过了天敌，却没有让我走出去。\n找不到食物的日子被浓缩成最后一幕：我饿死在瓶内。死亡留下的化学信号吸引其他寄居蟹前来，同一个瓶子，成了接连夺走生命的“集体陷阱”。", "The bottle kept predators out, but would not let me leave.\nDays without food became one final scene: I starved inside the bottle. Chemical signals left after my death attracted other hermit crabs. The same bottle became a deadly trap, claiming one life after another."],
+    trapQuote: ["一個被遺下的容器，可能困住不只一個生命；減少廢棄物，也要安全清除海岸垃圾。", "一个被遗下的容器，可能困住不只一个生命；减少废弃物，也要安全清除海岸垃圾。", "One abandoned container can trap more than one life. Reduce waste and remove coastal litter safely."],
+    artIntro: ["海岸與寄居蟹的像素插畫", "海岸与寄居蟹的像素插画", "Pixel-art illustration of the coast and a hermit crab"],
+    artSafe: ["寄居蟹在天然貝殼中平安度過夜晚", "寄居蟹在天然贝壳中平安度过夜晚", "A hermit crab spends the night safely inside a natural shell"],
+    artPredator: ["海鳥逼近躲在不安全寄居物中的寄居蟹", "海鸟逼近躲在不安全寄居物中的寄居蟹", "A seabird approaches a hermit crab hiding in an unsafe home"],
+    artBottle: ["寄居蟹這次成功離開瓶子", "寄居蟹这次成功离开瓶子", "A hermit crab manages to leave a bottle this time"],
+    artFoot: ["巨大鞋底落向沙灘上的小寄居蟹", "巨大鞋底落向沙滩上的小寄居蟹", "A huge shoe descends toward a small hermit crab on the sand"],
+    artMicro: ["灰暗潮池中，寄居蟹被象徵污染的微小顆粒包圍", "灰暗潮池中，寄居蟹被象征污染的微小颗粒包围", "A hermit crab in a grey tide pool is surrounded by tiny particles representing pollution"],
+    artTrap: ["寄居蟹困在瓶內，化學訊號吸引其他寄居蟹接近", "寄居蟹困在瓶内，化学信号吸引其他寄居蟹接近", "A hermit crab is trapped in a bottle as chemical signals draw other crabs closer"],
+    artWin: ["志工清理海岸，寄居蟹群在天然空殼之間生活", "志愿者清理海岸，寄居蟹群在天然空壳之间生活", "Volunteers clean the shore while hermit crabs live among empty natural shells"],
+    artPause: ["暫停中的海岸插畫", "暂停中的海岸插画", "A coastal illustration shown while the game is paused"],
+    rulesTitle: ["遊戲規則與科學說明", "游戏规则与科学说明", "Game Rules & Science Notes"],
+    rule1: ["每次新旅程有 3 點生命，起初背著天然貝殼（好）；生命不會在過關時恢復。", "每次新旅程有 3 点生命，起初背着天然贝壳（好）；生命不会在过关时恢复。", "Each new journey begins with 3 health points and an intact natural shell. Health does not recover between chapters."],
+    rule2: ["每關前 15 秒可以換殼，之後鎖定寄居物，但仍能移動避險；第 20 秒結算。", "每关前 15 秒可以换壳，之后锁定寄居物，但仍能移动避险；第 20 秒结算。", "You can change homes during the first 15 seconds of each chapter. After that, your home is locked in, but you can still move. The night is resolved at 20 seconds."],
+    rule3: ["天然貝殼（好）：本晚不扣血，之後變成天然貝殼（壞）。", "天然贝壳（好）：今晚不扣血，之后变成天然贝壳（坏）。", "Intact natural shell: lose no health tonight. The shell then becomes damaged."],
+    rule4: ["天然貝殼（壞）／瓶蓋：本晚受天敵攻擊，扣 1 點生命。", "天然贝壳（坏）／瓶盖：今晚受天敌攻击，扣 1 点生命。", "Damaged natural shell / bottle cap: a predator attacks tonight, costing 1 health."],
+    rule5: ["塑膠瓶／玻璃瓶：本晚避過天敵，但各有 50% 機率受困，直接進入死亡結局。每晚只判定一次。", "塑料瓶／玻璃瓶：今晚避过天敌，但各有 50% 的概率受困，直接进入死亡结局。每晚只判定一次。", "Plastic bottle / glass bottle: avoid predators tonight, but face a 50% chance of becoming trapped and reaching a death ending. This is checked only once per night."],
+    rule6: ["第二關有 3 次隨機踩踏；腳印預警出現 1 秒後踩下，每次命中扣 1 點生命。", "第二关有 3 次随机踩踏；脚印预警出现 1 秒后踩下，每次命中扣 1 点生命。", "Chapter 2 has 3 random footsteps. Each strikes 1 second after its warning appears. Each hit costs 1 health."],
+    rule7: ["第三關開始立即扣 1 點生命；初始地圖的 6 枚天然貝殼中，3 枚好、3 枚壞。", "第三关开始立即扣 1 点生命；初始地图的 6 枚天然贝壳中，3 枚好、3 枚坏。", "Entering Chapter 3 immediately costs 1 health. Of the 6 natural shells initially on the map, 3 are intact and 3 are damaged."],
+    rule8: ["換殼會把原本的寄居物留在地上。寄居物及剩餘生命會帶到下一關。", "换壳会把原本的寄居物留在地上。寄居物及剩余生命会带到下一关。", "Changing homes leaves your previous shell or container on the ground. Your current home and remaining health carry over to the next chapter."],
+    rule9: ["生命歸零立即結束；瓶內受困則直接使生命歸零。", "生命归零立即结束；瓶内受困则直接使生命归零。", "The journey ends immediately when health reaches zero. Becoming trapped in a bottle directly reduces health to zero."],
+    rule10: ["劇情、關卡介紹及暫停畫面不計時。切換視窗或分頁會自動暫停。", "剧情、关卡介绍及暂停画面不计时。切换窗口或标签页会自动暂停。", "The timer stops during stories, chapter introductions, and pauses. Switching windows or tabs automatically pauses the game."],
+    scienceNote: ["科學說明：本作是濃縮不同海岸情境的寓言，不是單一物種的生態模擬。每夜好殼變壞、固定扣血、半數好殼及 50% 受困率都是遊戲化設定，並非實測比例。淨灘也不代表能立即逆轉海洋酸化。", "科学说明：本作是浓缩不同海岸情境的寓言，不是单一物种的生态模拟。每夜好壳变坏、固定扣血、半数好壳及 50% 的受困率都是游戏化设定，并非实测比例。净滩也不代表能立即逆转海洋酸化。", "Science note: This game is an allegory combining different coastal situations, not an ecological simulation of a single species. Nightly shell damage, fixed health loss, half the shells being intact, and the 50% entrapment chance are gameplay abstractions, not measured rates. Beach clean-ups do not immediately reverse ocean acidification."]
+  };
+
+  const RULES = Object.freeze({
+    maxHp: 3,
+    swapUntil: 15,
+    dayDuration: 20,
+    bottleTrapChance: 0.5,
+    footDelay: 1,
+    speed: 108,
+    reach: 29
+  });
+
+  const W = 480, H = 288, MW = 720, MH = 432;
+  const $ = id => document.getElementById(id);
+  const canvas = $("world"), ctx = canvas.getContext("2d");
+  const art = $("sceneArt"), artCtx = art.getContext("2d");
+
+  if (!ctx || !artCtx) {
+    $("hint").textContent = "This browser cannot create the game canvas.";
+    return;
+  }
+
+  ctx.imageSmoothingEnabled = false;
+  artCtx.imageSmoothingEnabled = false;
+
+  const copies = (type, count) => Array(count).fill(type);
+
+  const LEVELS = [
+    { name: "level1", tag: "level1Tag", intro: "level1Intro", mission: "level1Mission", types: copies("good", 21), palette: ["#e6ce92", "#f1dfad", "#60c7b7", "#288d9f", "#b8f1d1"], debris: 0, friends: 7 },
+    { name: "level2", tag: "level2Tag", intro: "level2Intro", mission: "level2Mission", types: [...copies("good", 3), ...copies("bad", 3), ...copies("cap", 8), ...copies("plastic", 5), ...copies("glass", 4)], palette: ["#b7b19a", "#c8c0a9", "#7ca8a4", "#526f80", "#c1d3c5"], debris: 65, friends: 2 },
+    { name: "level3", tag: "level3Tag", intro: "level3Intro", mission: "level3Mission", types: [...copies("good", 3), ...copies("bad", 3), ...copies("cap", 3), ...copies("plastic", 3), ...copies("glass", 2)], palette: ["#828e8c", "#9ca5a0", "#647e83", "#394f64", "#a7bfba"], debris: 90, friends: 1 },
+    { name: "level4", tag: "level4Tag", intro: "level4Intro", mission: "level4Mission", types: copies("good", 25), palette: ["#dfcf9d", "#f0dfb3", "#6dc6b4", "#318d9c", "#c7efcb"], debris: 12, friends: 10 }
+  ];
+
+  const ENDINGS = {
+    win: { label: "goodEnding", name: "winName", text: "winText", quote: "winQuote", art: "win" },
+    predator: { label: "badEnding1", name: "predatorName", text: "predatorEndText", quote: "predatorQuote", art: "predator" },
+    foot: { label: "badEnding2", name: "footName", text: "footText", quote: "footQuote", art: "foot" },
+    micro: { label: "badEnding3", name: "microName", text: "microText", quote: "microQuote", art: "micro" },
+    trap: { label: "badEnding4", name: "trapName", text: "trapText", quote: "trapQuote", art: "trap" }
+  };
+
+  const ART_LABELS = { intro: "artIntro", safe: "artSafe", predator: "artPredator", bottle: "artBottle", foot: "artFoot", micro: "artMicro", trap: "artTrap", win: "artWin", pause: "artPause" };
+
+  const keys = new Set();
+  const touchKeys = new Set();
+  let language = "zh-Hant";
+  let unlocked = new Set();
+  let S = null;
+  let modal = null;
+
+  try {
+    const savedLanguage = localStorage.getItem("sdg14-crab-language");
+    if (LANGUAGES.includes(savedLanguage)) language = savedLanguage;
+    const savedEndings = JSON.parse(localStorage.getItem("sdg14-crab-endings") || "[]");
+    if (Array.isArray(savedEndings)) {
+      unlocked = new Set(savedEndings.filter(key => Object.prototype.hasOwnProperty.call(ENDINGS, key)));
+    }
+  } catch {}
+
+  function tr(key) {
+    const entry = TEXT[key];
+    const index = LANGUAGES.indexOf(language);
+    if (!entry) return key;
+    return entry[index];
+  }
+
+  function tipKey(type) {
+    if (type === "good") return "goodTip";
+    if (type === "bad" || type === "cap") return "badTip";
+    return "bottleTip";
+  }
+
+  function byLanguage(traditional, simplified, english) {
+    if (language === "zh-Hans") return simplified;
+    if (language === "en") return english;
+    return traditional;
+  }
+
+  function setText(id, value) {
+    const element = $(id);
+    if (element.textContent !== value) element.textContent = value;
+  }
+
+  function clearInput() {
+    keys.clear();
+    touchKeys.clear();
+  }
+
+  function changeLanguage(nextLanguage) {
+    if (!LANGUAGES.includes(nextLanguage)) return;
+    language = nextLanguage;
+    clearInput();
+    try { localStorage.setItem("sdg14-crab-language", language); } catch {}
+    updateStaticInterface();
+    drawGallery();
+    updateHud();
+    refreshModal();
+  }
+
+  function updateStaticInterface() {
+    document.documentElement.lang = language;
+    document.title = byLanguage("借一個明天｜SDG 14 寄居蟹的尋殼旅程", "借一个明天｜SDG 14 寄居蟹的寻壳旅程", "A Home for Tomorrow | SDG 14");
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+      element.textContent = tr(element.dataset.i18n);
+    });
+    document.querySelectorAll(".language-select").forEach(select => {
+      select.value = language;
+      select.setAttribute("aria-label", tr("chooseLanguage"));
+    });
+    $("hud").setAttribute("aria-label", tr("gameStatus"));
+    $("frame").setAttribute("aria-label", tr("gameView"));
+    document.querySelector(".touch-controls").setAttribute("aria-label", tr("touchControls"));
+    canvas.setAttribute("aria-label", tr("canvasDescription"));
+    canvas.textContent = tr("canvasFallback");
+    const directionLabels = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+    document.querySelectorAll("[data-key]").forEach(button => {
+      button.setAttribute("aria-label", tr(directionLabels[button.dataset.key]));
+    });
+    $("swap").textContent = tr("swapButton");
+  }
+
+  document.querySelectorAll(".language-select").forEach(select => {
+    select.addEventListener("keydown", event => event.stopPropagation());
+    select.addEventListener("focus", clearInput);
+    select.addEventListener("change", () => changeLanguage(select.value));
+  });
+
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const rand = (min, max) => min + Math.random() * (max - min);
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+  function noise(x, y, seed = 0) {
+    const n = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
+    return n - Math.floor(n);
+  }
+
+  function rect(g, x, y, width, height, color) {
+    g.fillStyle = color;
+    g.fillRect(Math.round(x), Math.round(y), Math.ceil(width), Math.ceil(height));
+  }
+
+  function shell(g, x, y, type, scale = 1) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+    if (type === "good" || type === "bad") {
+      const good = type === "good";
+      const dark = good ? "#865847" : "#505e64";
+      const mid = good ? "#d9a777" : "#8f9898";
+      const light = good ? "#ffe4a8" : "#ccd0c3";
+      rect(g, -7, -5, 14, 11, dark);
+      rect(g, -5, -8, 10, 15, dark);
+      rect(g, -6, -4, 12, 9, mid);
+      rect(g, -4, -7, 8, 13, mid);
+      rect(g, -3, -5, 7, 2, light);
+      rect(g, 3, -3, 2, 6, light);
+      rect(g, -3, 2, 6, 2, light);
+      rect(g, -4, -2, 2, 4, light);
+      rect(g, -1, -2, 3, 2, dark);
+      if (!good) {
+        rect(g, -2, -7, 2, 5, "#35464f");
+        rect(g, -4, -3, 3, 2, "#35464f");
+        rect(g, -4, -1, 2, 5, "#35464f");
+        rect(g, 3, 4, 4, 3, "#35464f");
+      }
+    } else if (type === "cap") {
+      rect(g, -8, -5, 16, 11, "#543752");
+      rect(g, -6, -7, 12, 15, "#543752");
+      rect(g, -6, -5, 12, 10, "#db738c");
+      rect(g, -4, -4, 8, 6, "#f3a7ac");
+      for (let i = -6; i <= 6; i += 4) rect(g, i, 4, 2, 3, "#a1476b");
+    } else {
+      const glass = type === "glass";
+      const edge = glass ? "#365c4c" : "#385c79";
+      const body = glass ? "#85b99a" : "#99c8db";
+      rect(g, -13, -6, 20, 13, edge);
+      rect(g, 6, -4, 6, 9, edge);
+      rect(g, 11, -3, 5, 7, edge);
+      rect(g, -11, -4, 17, 9, body);
+      rect(g, 6, -2, 6, 5, body);
+      rect(g, -9, -3, 3, 7, glass ? "#bedec2" : "#e1f4ef");
+      rect(g, -3, -4, 6, 9, glass ? "#9da87c" : "#dfd7b5");
+      rect(g, 13, -2, 2, 5, "#223944");
+    }
+    g.restore();
+  }
+
+  function crab(g, x, y, type = "good", scale = 1, phase = 0) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+    const step = Math.sin(phase) > 0 ? 1 : -1;
+    rect(g, -11, 7, 22, 3, "rgba(27,38,42,.22)");
+    rect(g, -10, 1 + step, 5, 2, "#a94f44");
+    rect(g, 5, 1 - step, 5, 2, "#a94f44");
+    rect(g, -10, 5 - step, 5, 2, "#e68562");
+    rect(g, 5, 5 + step, 5, 2, "#e68562");
+    rect(g, -6, 0, 12, 8, "#ce6655");
+    shell(g, 0, -4, type);
+    rect(g, -6, 5, 12, 4, "#ef9d72");
+    rect(g, -5, 3, 2, 4, "#513e40");
+    rect(g, 3, 3, 2, 4, "#513e40");
+    rect(g, -5, 3, 1, 1, "#fff2c6");
+    rect(g, 3, 3, 1, 1, "#fff2c6");
+    g.restore();
+  }
+
+  function person(g, x, y, scale = 1, volunteer = true) {
+    g.save();
+    g.translate(Math.round(x), Math.round(y));
+    g.scale(scale, scale);
+    rect(g, -7, 11, 17, 3, "rgba(20,35,39,.22)");
+    rect(g, -4, 3, 3, 9, "#344f66");
+    rect(g, 2, 3, 3, 9, "#344f66");
+    rect(g, -6, -7, 12, 12, volunteer ? "#6aaa8a" : "#ce8a92");
+    rect(g, -4, -14, 8, 8, "#eac299");
+    rect(g, -6, -15, 12, 3, "#e4d499");
+    rect(g, -8, -12, 16, 2, "#b7a66d");
+    rect(g, 6, -3, 3, 7, "#eac299");
+    if (volunteer) rect(g, 8, 1, 8, 12, "#3e5965");
+    g.restore();
+  }
+
+  function bird(g, x, y, scale = 1) {
+    g.save();
+    g.translate(x, y);
+    g.scale(scale, scale);
+    rect(g, -22, -3, 16, 5, "#344451");
+    rect(g, 6, -3, 16, 5, "#344451");
+    rect(g, -15, 0, 30, 4, "#d3d9ce");
+    rect(g, -5, -7, 10, 16, "#f0eee0");
+    rect(g, -3, 8, 6, 5, "#e1b76f");
+    rect(g, -2, 3, 1, 2, "#24313d");
+    rect(g, 2, 3, 1, 2, "#24313d");
+    g.restore();
+  }
+
+  function boot(g, x, y, scale = 1, color = "#564b51") {
+    g.save();
+    g.translate(x, y);
+    g.scale(scale, scale);
+    rect(g, -12, -25, 25, 46, color);
+    rect(g, -17, -18, 34, 26, color);
+    rect(g, -8, 21, 18, 7, color);
+    rect(g, -10, -17, 20, 3, "#8c7d7d");
+    rect(g, -10, -8, 20, 3, "#8c7d7d");
+    rect(g, -9, 2, 18, 3, "#8c7d7d");
+    g.restore();
+  }
+
+  function coral(g, x, y, color, scale = 1) {
+    rect(g, x - 2 * scale, y - 9 * scale, 4 * scale, 14 * scale, color);
+    rect(g, x - 8 * scale, y - 6 * scale, 7 * scale, 3 * scale, color);
+    rect(g, x + scale, y - 3 * scale, 8 * scale, 3 * scale, color);
+    rect(g, x - 8 * scale, y - 11 * scale, 3 * scale, 7 * scale, color);
+    rect(g, x + 6 * scale, y - 8 * scale, 3 * scale, 7 * scale, color);
+  }
+
+  function shore(y) {
+    return (S.level === 2 ? 433 : 475) + Math.sin(y / 67) * 26;
+  }
+
+  function walkable(x, y) {
+    return x >= 14 && y >= 18 && y <= MH - 18 && x <= shore(y) + 22 &&
+      !S.rocks.some(rock => Math.hypot(x - rock.x, y - rock.y) < rock.r + 7);
+  }
+
+  function makeState() {
+    return {
+      mode: "title", level: 0, hp: RULES.maxHp, home: "good", time: 0,
+      seed: Math.floor(Math.random() * 10000), player: { x: 100, y: 216 },
+      items: [], rocks: [], debris: [], friends: [], stomps: [],
+      footTimes: [], footIndex: 0, message: null, messageUntil: 0,
+      hurtFlash: 0, stride: 0, background: null
+    };
+  }
+
+  function makeGround() {
+    const bg = document.createElement("canvas");
+    bg.width = MW; bg.height = MH;
+    const g = bg.getContext("2d");
+    const palette = LEVELS[S.level].palette;
+    for (let y = 0; y < MH; y += 16) {
+      for (let x = 0; x < MW; x += 16) {
+        const coast = shore(y);
+        const land = x < coast;
+        const color = land ? palette[0] : x < coast + 34 ? palette[2] : palette[3];
+        rect(g, x, y, 16, 16, color);
+        const n = noise(x, y, S.seed);
+        if (land) {
+          rect(g, x + n * 11, y + n * 9, 2, 2, palette[1]);
+          if (n > .7) rect(g, x + 3, y + 10, 3, 1, "#a99e7f");
+        } else if (n > .5) {
+          rect(g, x + 2, y + 8, 9, 1, palette[2]);
+        }
+      }
+      rect(g, shore(y), y, 5, 12, palette[4]);
+    }
+    for (let i = 0; i < 28; i++) {
+      const y = 25 + noise(i, 3, S.seed) * (MH - 50);
+      const x = shore(y) - 55 + noise(i, 9, S.seed) * 34;
+      const color = S.level === 2 ? "#b0b4aa" : i % 2 ? "#e7998e" : "#79ac91";
+      coral(g, x, y, color);
+    }
+    for (const rock of S.rocks) {
+      rect(g, rock.x - rock.r, rock.y - 8, rock.r * 2, 16, "#687c7c");
+      rect(g, rock.x - rock.r + 3, rock.y - 12, rock.r * 2 - 6, 18, "#85958b");
+      rect(g, rock.x - 5, rock.y - 10, 9, 3, "#a8b6a0");
+    }
+    S.background = bg;
+  }
+
+  function buildLevel(index) {
+    S.level = index; S.time = 0; S.player = { x: 100, y: 216 };
+    S.stride = 0; S.hurtFlash = 0; S.items = []; S.stomps = [];
+    S.footIndex = 0; S.message = null; S.messageUntil = 0;
+    S.rocks = [
+      { x: 212, y: 113, r: 15 }, { x: 326, y: 282, r: 20 },
+      { x: 167, y: 351, r: 16 }, { x: 388, y: 66, r: 14 },
+      { x: 79, y: 85, r: 15 }, { x: 404, y: 365, r: 17 }
+    ];
+    S.footTimes = index === 1 ? [rand(2.5, 4), rand(7.5, 9), rand(14.5, 16)] : [];
+    const slots = [];
+    for (let y = 42; y < MH - 25; y += 46) {
+      for (let x = 42; x < 485; x += 46) {
+        const position = { x: x + rand(-6, 6), y: y + rand(-6, 6) };
+        if (walkable(position.x, position.y) && distance(position, S.player) > 28) slots.push(position);
+      }
+    }
+    for (let i = slots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [slots[i], slots[j]] = [slots[j], slots[i]];
+    }
+    LEVELS[index].types.forEach((type, id) => {
+      const position = slots.pop();
+      if (position) S.items.push({ ...position, id, type });
+    });
+    S.debris = Array.from({ length: LEVELS[index].debris }, (_, i) => ({
+      x: 24 + noise(i, 14, S.seed) * 385,
+      y: 25 + noise(i, 16, S.seed) * (MH - 50),
+      color: ["#d2d4c5", "#a7b9c5", "#b27e91", "#6f7886"][i % 4],
+      shape: i % 3
+    }));
+    S.friends = Array.from({ length: LEVELS[index].friends }, (_, i) => ({
+      x: 60 + noise(i, 21, S.seed) * 350,
+      y: 45 + noise(i, 24, S.seed) * (MH - 90)
+    }));
+    makeGround();
+  }
+
+  function drawStory(kind, index) {
+    const g = artCtx;
+    const palette = LEVELS[index].palette;
+    g.clearRect(0, 0, 384, 152);
+    for (let y = 0; y < 152; y += 8) {
+      const coast = 268 + Math.sin(y / 28) * 17;
+      for (let x = 0; x < 384; x += 8) {
+        const color = x < coast ? palette[0] : x < coast + 24 ? palette[2] : palette[3];
+        rect(g, x, y, 8, 8, color);
+        if (x < coast && noise(x, y, index) > .7) rect(g, x + 2, y + 3, 2, 1, palette[1]);
+      }
+      rect(g, coast, y, 3, 6, palette[4]);
+    }
+    for (let i = 0; i < 8; i++) {
+      coral(g, 18 + i * 32, 124 + (i % 3) * 6, index === 2 ? "#a6aaa0" : "#db9b91");
+    }
+    const dirty = index === 1 ? 22 : index === 2 ? 32 : 0;
+    for (let i = 0; i < dirty; i++) {
+      rect(g, 20 + noise(i, 71) * 235, 20 + noise(i, 72) * 110, 5, 3, i % 2 ? "#b18e9c" : "#d2d7cd");
+    }
+    if (kind === "trap") {
+      shell(g, 184, 75, S.home === "glass" ? "glass" : "plastic", 5.5);
+      g.save(); g.globalAlpha = .55; crab(g, 162, 82, "bad", 1.3); g.restore();
+      for (let i = 0; i < 3; i++) crab(g, 294 + i * 24, 51 + i * 33, "bad", 1.3);
+      for (let i = 0; i < 15; i++) rect(g, 259 + i * 5, 76 + Math.sin(i * .65) * 15, 2, 2, "#f2dca2");
+    } else if (kind === "win") {
+      for (let i = 0; i < 9; i++) crab(g, 57 + (i % 5) * 43, 64 + Math.floor(i / 5) * 43, "good", 1.4, i);
+      person(g, 291, 43, 1.4); person(g, 325, 116, 1.2); crab(g, 182, 84, "good", 2.6);
+    } else if (kind === "foot") {
+      crab(g, 134, 108, "bad", 2.1); boot(g, 195, 67, 2.1);
+    } else if (kind === "micro") {
+      crab(g, 160, 90, "bad", 2.8);
+      for (let i = 0; i < 50; i++) rect(g, 20 + noise(i, 31) * 330, 10 + noise(i, 32) * 130, 2, 2, i % 2 ? "#ca99b6" : "#a4bdc2");
+    } else if (kind === "predator") {
+      crab(g, 149, 102, S.home, 2.5); bird(g, 200, 49, 2.4);
+    } else if (kind === "bottle") {
+      shell(g, 220, 75, S.home, 3.4); crab(g, 122, 100, "good", 2);
+    } else {
+      for (let i = 0; i < 6; i++) {
+        const type = index === 1 ? ["cap", "plastic", "good"][i % 3] : index === 2 && i % 2 ? "bad" : "good";
+        shell(g, 42 + i * 36, 45 + (i % 2) * 47, type, 1.3);
+      }
+      crab(g, 165, 89, kind === "safe" ? "good" : S.home, 2.7);
+      if (index === 1) { person(g, 77, 34, 1.1, false); person(g, 258, 111, 1.3, false); }
+      if (index === 3) { person(g, 62, 53, 1.4); person(g, 265, 101, 1.4); crab(g, 220, 117, "good", 1.3); crab(g, 109, 122, "good", 1.2); }
+    }
+    if (["safe", "bottle", "predator"].includes(kind)) {
+      rect(g, 0, 0, 384, 152, "rgba(18,29,61,.24)");
+      rect(g, 327, 21, 14, 14, "#fff0b8");
+      rect(g, 323, 18, 12, 13, palette[3]);
+      if (kind === "safe") { g.fillStyle = "#fff0ce"; g.font = "12px monospace"; g.fillText("z Z", 191, 52); }
+    }
+    art.setAttribute("aria-label", tr(ART_LABELS[kind] || "artIntro"));
+  }
+
+  function showModal(config) {
+    clearInput(); modal = config; $("overlay").hidden = false;
+    refreshModal(); $("next").focus({ preventScroll: true });
+  }
+
+  function refreshModal() {
+    if (!modal || $("overlay").hidden || !S) return;
+    let tag = "", title = "", text = "", quote = "";
+    if (modal.type === "title") {
+      tag = tr("titleTag"); title = tr("gameTitle"); text = tr("titleText"); quote = tr("titleQuote");
+    } else if (modal.type === "intro") {
+      const level = LEVELS[modal.level];
+      tag = tr(level.tag); title = tr(level.name);
+      text = [tr(level.intro), tr(level.mission), tr("timingReminder")].join("\n\n");
+    } else if (modal.type === "pause") {
+      tag = tr("pauseTag"); title = tr("pauseTitle"); text = tr("pauseText");
+    } else if (modal.type === "night") {
+      const day = modal.level + 1;
+      tag = byLanguage(`第 ${day} 天 · 夜晚結算`, `第 ${day} 天 · 夜晚结算`, `DAY ${day} · NIGHTFALL`);
+      title = tr(modal.titleKey);
+      const remaining = byLanguage(`剩餘生命：${modal.hp}／${RULES.maxHp}`, `剩余生命：${modal.hp}／${RULES.maxHp}`, `Health remaining: ${modal.hp}/${RULES.maxHp}`);
+      text = `${tr(modal.textKey)}\n\n${remaining}`;
+    } else if (modal.type === "ending") {
+      const ending = ENDINGS[modal.ending];
+      tag = byLanguage(`旅程終章 · 已發現 ${unlocked.size}／5 種結局`, `旅程终章 · 已发现 ${unlocked.size}／5 种结局`, `JOURNEY'S END · ${unlocked.size}/5 ENDINGS DISCOVERED`);
+      title = `${tr(ending.label)}｜${tr(ending.name)}`; text = tr(ending.text); quote = tr(ending.quote);
+    }
+    setText("sceneEyebrow", tag); setText("sceneTitle", title); setText("sceneText", text);
+    setText("sceneQuote", quote); setText("next", tr(modal.buttonKey));
+    $("sceneQuote").hidden = !quote; drawStory(modal.art || "intro", S.level);
+  }
+
+  function hideModal() {
+    $("overlay").hidden = true; modal = null; clearInput(); canvas.focus({ preventScroll: true });
+  }
+
+  $("next").addEventListener("click", () => {
+    if (!modal || typeof modal.action !== "function") return;
+    const action = modal.action; modal.action = null; action();
+  });
+
+  function say(key, args = {}, seconds = 2.6) { S.message = { key, args }; S.messageUntil = S.time + seconds; }
+
+  function messageText(message) {
+    if (!message) return "";
+    if (message.key === "swapped") {
+      const type = message.args.type;
+      return byLanguage(`換上${tr(type)}。${tr(tipKey(type))}。`, `换上${tr(type)}。${tr(tipKey(type))}。`, `New home: ${tr(type)}. ${tr(tipKey(type))}.`);
+    }
+    if (message.key === "footWarning") {
+      const count = message.args.count;
+      return byLanguage(`腳步預警 ${count}／3！一秒後踩下，快離開腳印範圍！`, `脚步预警 ${count}／3！一秒后踩下，快离开脚印范围！`, `Footstep warning ${count}/3! Impact in 1 second—leave the marked area!`);
+    }
+    return tr(message.key);
+  }
+
+  function newGame() { S = makeState(); introduce(0); }
+
+  function introduce(index) {
+    buildLevel(index); S.mode = "intro";
+    showModal({ type: "intro", level: index, art: "intro", buttonKey: "enter", action: beginLevel });
+    updateHud();
+  }
+
+  function beginLevel() {
+    hideModal(); S.mode = "play"; S.time = 0; say("findHome");
+    if (S.level === 2) damage(1, "micro");
+    updateHud();
+  }
+
+  function nearestItem() {
+    let selected = null, best = RULES.reach;
+    for (const item of S.items) {
+      const d = distance(item, S.player);
+      if (d < best) { selected = item; best = d; }
+    }
+    return selected;
+  }
+
+  function swapHome() {
+    if (S.mode !== "play") return;
+    if (S.time >= RULES.swapUntil) { say("lockedMessage"); return; }
+    const item = nearestItem();
+    if (!item) { say("moveCloser"); return; }
+    const oldHome = S.home; S.home = item.type; item.type = oldHome;
+    say("swapped", { type: S.home }); updateHud();
+  }
+
+  function damage(amount, cause) {
+    if (S.mode === "end") return false;
+    S.hp = Math.max(0, S.hp - amount); S.hurtFlash = .5;
+    const messageKeys = { foot: "footDamage", micro: "microDamage", predator: "predatorDamage" };
+    say(messageKeys[cause], {}, 3.5);
+    if (S.hp === 0) { endGame(cause); return false; }
+    return true;
+  }
+
+  function finishDay() {
+    if (S.mode !== "play") return;
+    S.mode = "night"; clearInput();
+    let titleKey, textKey, kind;
+    if (S.home === "good") {
+      S.home = "bad"; titleKey = "safeTitle"; textKey = "safeText"; kind = "safe";
+    } else if (S.home === "bad" || S.home === "cap") {
+      if (!damage(1, "predator")) return;
+      titleKey = "predatorNightTitle"; textKey = "predatorNightText"; kind = "predator";
+    } else {
+      if (Math.random() < RULES.bottleTrapChance) { S.hp = 0; endGame("trap"); return; }
+      titleKey = "bottleNightTitle"; textKey = "bottleNightText"; kind = "bottle";
+    }
+    showModal({
+      type: "night", level: S.level, hp: S.hp, titleKey, textKey, art: kind,
+      buttonKey: S.level === 3 ? "welcomeTomorrow" : "nextShore",
+      action: () => { if (S.level === 3) endGame("win"); else introduce(S.level + 1); }
+    });
+    updateHud();
+  }
+
+  function endGame(key) {
+    if (S.mode === "end") return;
+    if (key !== "win") S.hp = 0;
+    S.mode = "end"; clearInput(); unlocked.add(key);
+    try { localStorage.setItem("sdg14-crab-endings", JSON.stringify([...unlocked])); } catch {}
+    drawGallery();
+    showModal({ type: "ending", ending: key, art: ENDINGS[key].art, buttonKey: "restart", action: newGame });
+    updateHud();
+  }
+
+  function togglePause() {
+    if (S.mode === "play") {
+      S.mode = "pause";
+      showModal({ type: "pause", art: "pause", buttonKey: "resumeJourney", action: () => { hideModal(); S.mode = "play"; updateHud(); } });
+    } else if (S.mode === "pause") {
+      hideModal(); S.mode = "play";
+    }
+    updateHud();
+  }
+
+  function drawGallery() {
+    $("gallery").replaceChildren();
+    for (const [key, ending] of Object.entries(ENDINGS)) {
+      const badge = document.createElement("span");
+      const found = unlocked.has(key);
+      badge.className = `badge${found ? " unlocked" : ""}`;
+      badge.textContent = found ? `✓ ${tr(ending.name)}` : `？ ${tr(ending.label)}`;
+      $("gallery").append(badge);
+    }
+    setText("collectionTitle", `${tr("gallery")} · ${unlocked.size}／5`);
+  }
+
+  function updateHud() {
+    if (!S) return;
+    setText("chapter", `${S.level + 1}／4 ${tr(LEVELS[S.level].name)}`);
+    setText("hearts", "♥".repeat(S.hp) + "♡".repeat(RULES.maxHp - S.hp));
+    $("hearts").setAttribute("aria-label", byLanguage(`生命值 ${S.hp}，上限 ${RULES.maxHp}`, `生命值 ${S.hp}，上限 ${RULES.maxHp}`, `Health: ${S.hp} out of ${RULES.maxHp}`));
+    setText("home", tr(S.home));
+    const locked = S.time >= RULES.swapUntil;
+    $("clock").dataset.locked = String(locked);
+    if (S.mode === "play" || S.mode === "pause") {
+      if (locked) {
+        const seconds = Math.max(0, Math.ceil(RULES.dayDuration - S.time));
+        setText("clock", byLanguage(`${seconds} 秒後入夜`, `${seconds} 秒后入夜`, `Nightfall in ${seconds}s`));
+      } else {
+        const seconds = Math.ceil(RULES.swapUntil - S.time);
+        setText("clock", byLanguage(`${seconds} 秒可換殼`, `${seconds} 秒可换壳`, `Change home: ${seconds}s`));
+      }
+    } else {
+      setText("clock", S.mode === "night" || S.mode === "end" ? tr("dayComplete") : tr("waiting"));
+    }
+    $("progress").style.width = `${Math.min(100, S.time / RULES.dayDuration * 100)}%`;
+    $("progress").style.background = locked ? "#e8bc7b" : "#92e0ba";
+    $("pause").disabled = !["play", "pause"].includes(S.mode);
+    setText("pause", S.mode === "pause" ? tr("resumeButton") : tr("pauseButton"));
+    $("swap").disabled = S.mode !== "play" || locked;
+    let hint = "";
+    if (S.mode === "play") {
+      if (S.message && S.time < S.messageUntil) hint = messageText(S.message);
+      else if (locked) hint = tr("lockedHint");
+      else {
+        const nearby = nearestItem();
+        if (nearby) hint = byLanguage(`E 換上${tr(nearby.type)}｜${tr(tipKey(nearby.type))}`, `E 换上${tr(nearby.type)}｜${tr(tipKey(nearby.type))}`, `E: Use ${tr(nearby.type)} | ${tr(tipKey(nearby.type))}`);
+        else hint = tr("exploreHint");
+      }
+    } else if (S.mode === "pause") hint = tr("pausedHint");
+    else if (S.mode === "end") hint = tr("endHint");
+    else hint = tr("readingHint");
+    setText("hint", hint);
+  }
+
+  function update(dt) {
+    if (S.mode !== "play") return;
+    const previousTime = S.time;
+    S.time = Math.min(RULES.dayDuration, S.time + dt);
+    S.hurtFlash = Math.max(0, S.hurtFlash - dt);
+    const held = code => keys.has(code) || touchKeys.has(code);
+    let dx = Number(held("ArrowRight") || held("KeyD")) - Number(held("ArrowLeft") || held("KeyA"));
+    let dy = Number(held("ArrowDown") || held("KeyS")) - Number(held("ArrowUp") || held("KeyW"));
+    if (dx || dy) {
+      const length = Math.hypot(dx, dy);
+      dx /= length; dy /= length;
+      const nextX = S.player.x + dx * RULES.speed * dt;
+      if (walkable(nextX, S.player.y)) S.player.x = nextX;
+      const nextY = S.player.y + dy * RULES.speed * dt;
+      if (walkable(S.player.x, nextY)) S.player.y = nextY;
+      S.stride += dt * 16;
+    }
+    if (previousTime < RULES.swapUntil && S.time >= RULES.swapUntil) say("darker", {}, 5);
+    if (S.level === 1) {
+      while (S.footIndex < S.footTimes.length && S.time >= S.footTimes[S.footIndex]) {
+        const born = S.footTimes[S.footIndex++];
+        const y = clamp(S.player.y + rand(-22, 22), 30, MH - 30);
+        const x = clamp(S.player.x + rand(-24, 24), 24, shore(y) + 8);
+        S.stomps.push({ x, y, born, resolved: false });
+        say("footWarning", { count: S.footIndex }, 1.4);
+      }
+      for (const foot of S.stomps) {
+        const age = S.time - foot.born;
+        if (!foot.resolved && age >= RULES.footDelay) {
+          foot.resolved = true;
+          const hit = Math.abs(S.player.x - foot.x) <= 23 && Math.abs(S.player.y - foot.y) <= 34;
+          if (hit && !damage(1, "foot")) return;
+        }
+      }
+      S.stomps = S.stomps.filter(foot => S.time - foot.born < RULES.footDelay + .55);
+    }
+    if (S.time >= RULES.dayDuration) finishDay();
+  }
+
+  function drawMiniMap() {
+    const x = W - 83, y = 8, width = 74, height = 45;
+    rect(ctx, x - 2, y - 2, width + 4, height + 4, "#163342");
+    rect(ctx, x, y, width, height, "#497b83");
+    for (let row = 0; row < height; row++) rect(ctx, x, y + row, shore(row / height * MH) / MW * width, 1, "#b4ac8e");
+    for (const item of S.items) rect(ctx, x + item.x / MW * width, y + item.y / MH * height, 1, 1, "#f8ecc9");
+    rect(ctx, x + S.player.x / MW * width - 1, y + S.player.y / MH * height - 1, 3, 3, "#ff8b78");
+  }
+
+  function render(now) {
+    const camX = Math.floor(clamp(S.player.x - W / 2, 0, MW - W));
+    const camY = Math.floor(clamp(S.player.y - H / 2, 0, MH - H));
+    ctx.clearRect(0, 0, W, H);
+    ctx.save(); ctx.translate(-camX, -camY); ctx.drawImage(S.background, 0, 0);
+    for (let i = 0; i < 35; i++) {
+      const x = 525 + noise(i, 44) * 175;
+      const y = (noise(i, 45) * MH + Math.sin(now + i) * 3 + MH) % MH;
+      rect(ctx, x, y, 6 + i % 5, 1, LEVELS[S.level].palette[2]);
+    }
+    const debrisCount = S.level === 3 ? Math.max(0, S.debris.length - Math.floor(S.time / 4) * 3) : S.debris.length;
+    S.debris.slice(0, debrisCount).forEach(item => {
+      rect(ctx, item.x, item.y, item.shape === 0 ? 7 : 3, item.shape === 1 ? 7 : 3, item.color);
+      if (item.shape === 2) rect(ctx, item.x + 4, item.y + 3, 3, 2, item.color);
+    });
+    S.friends.forEach((friend, index) => {
+      crab(ctx, friend.x + Math.sin(now * .6 + index) * 4, friend.y, S.level === 2 ? "bad" : "good", .8, now * 4 + index);
+    });
+    if (S.level === 3) {
+      person(ctx, 180 + Math.sin(now * .5) * 18, 73);
+      person(ctx, 365 + Math.sin(now * .5 + 2) * 15, 342);
+      person(ctx, 410, 173 + Math.sin(now * .45) * 14);
+      rect(ctx, 277, 52, 3, 17, "#735f4e"); rect(ctx, 262, 37, 33, 18, "#527e65");
+      rect(ctx, 267, 42, 23, 3, "#e3eac6"); rect(ctx, 270, 48, 17, 2, "#c4dbb9");
+    }
+    const near = S.mode === "play" && S.time < RULES.swapUntil ? nearestItem() : null;
+    for (const item of S.items) {
+      rect(ctx, item.x - 7, item.y + 6, 14, 3, "rgba(33,43,46,.15)");
+      shell(ctx, item.x, item.y, item.type);
+      if (near === item) {
+        const half = ["glass", "plastic"].includes(item.type) ? 18 : 11;
+        ctx.strokeStyle = "#fff6c9"; ctx.lineWidth = 1;
+        ctx.strokeRect(Math.round(item.x - half), Math.round(item.y - 12), half * 2, 24);
+        rect(ctx, item.x - 5, item.y - 24, 11, 10, "#173343");
+        ctx.fillStyle = "#fff0bd"; ctx.font = "8px monospace";
+        ctx.fillText("E", Math.round(item.x - 2), Math.round(item.y - 16));
+      }
+    }
+    crab(ctx, S.player.x, S.player.y, S.home, 1, S.stride);
+    rect(ctx, S.player.x - 3, S.player.y - 24, 6, 2, "#fff2ac");
+    rect(ctx, S.player.x - 2, S.player.y - 22, 4, 2, "#fff2ac");
+    rect(ctx, S.player.x - 1, S.player.y - 20, 2, 2, "#fff2ac");
+    if (S.level === 2) {
+      for (let i = 0; i < 40; i++) {
+        const x = noise(i, 52, S.seed) * 490;
+        const y = noise(i, 53, S.seed) * MH + Math.sin(now + i) * 3;
+        rect(ctx, x, y, 1, 1, i % 2 ? "#c4aac4" : "#cad4cd");
+      }
+    }
+    for (const foot of S.stomps) {
+      const age = S.time - foot.born;
+      if (age < RULES.footDelay) {
+        rect(ctx, foot.x - 23, foot.y - 34, 46, 68, "rgba(240,125,100,.20)");
+        ctx.save(); ctx.globalAlpha = .27; boot(ctx, foot.x, foot.y); ctx.restore();
+        ctx.strokeStyle = "#ffdf93"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+        ctx.strokeRect(foot.x - 23, foot.y - 34, 46, 68); ctx.setLineDash([]);
+        rect(ctx, foot.x - 23, foot.y + 36, 46 * (1 - age / RULES.footDelay), 3, "#ffd58d");
+        ctx.fillStyle = "#fff0b3"; ctx.font = "bold 16px monospace";
+        ctx.fillText("!", foot.x - 4, foot.y + 5);
+      } else {
+        ctx.save(); ctx.globalAlpha = clamp(1 - (age - RULES.footDelay) / .55, 0, 1);
+        boot(ctx, foot.x, foot.y); ctx.restore();
+      }
+    }
+    ctx.restore();
+    if (S.time > RULES.swapUntil) {
+      const night = (S.time - RULES.swapUntil) / (RULES.dayDuration - RULES.swapUntil);
+      rect(ctx, 0, 0, W, H, `rgba(13,23,48,${night * .32})`);
+    }
+    if (S.hurtFlash > 0) rect(ctx, 0, 0, W, H, `rgba(220,80,83,${S.hurtFlash * .3})`);
+    rect(ctx, 8, 8, 59, 17, "rgba(17,40,50,.84)");
+    ctx.fillStyle = "#f9edc7";
+    ctx.font = language === "en" ? "9px monospace" : "10px sans-serif";
+    const dayLabel = language === "en" ? `DAY 0${S.level + 1}` : `第 ${S.level + 1} 天`;
+    ctx.fillText(dayLabel, 16, 20);
+    drawMiniMap();
+  }
+
+  const movementCodes = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyW", "KeyA", "KeyS", "KeyD"];
+  document.addEventListener("keydown", event => {
+    if (event.code === "KeyP" || event.code === "Escape") {
+      if (S.mode === "play" || S.mode === "pause") { event.preventDefault(); if (!event.repeat) togglePause(); }
+      return;
+    }
+    if (S.mode !== "play") return;
+    if (movementCodes.includes(event.code)) { event.preventDefault(); keys.add(event.code); }
+    if (event.code === "KeyE" || event.code === "Space") { event.preventDefault(); if (!event.repeat) swapHome(); }
+  });
+
+  document.addEventListener("keyup", event => keys.delete(event.code));
+
+  document.querySelectorAll("[data-key]").forEach(button => {
+    const code = button.dataset.key;
+    button.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      if (S.mode !== "play") return;
+      button.setPointerCapture(event.pointerId);
+      touchKeys.add(code);
+    });
+    const release = () => touchKeys.delete(code);
+    button.addEventListener("pointerup", release);
+    button.addEventListener("pointercancel", release);
+    button.addEventListener("lostpointercapture", release);
+  });
+
+  $("swap").addEventListener("click", swapHome);
+  $("pause").addEventListener("click", togglePause);
+  window.addEventListener("blur", () => { clearInput(); if (S.mode === "play") togglePause(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) { clearInput(); if (S.mode === "play") togglePause(); } });
+
+  S = makeState();
+  buildLevel(0);
+  updateStaticInterface();
+  drawGallery();
+  showModal({ type: "title", art: "intro", buttonKey: "begin", action: newGame });
+  updateHud();
+
+  let last = performance.now();
+  let visualTime = 0;
+  function frame(now) {
+    const elapsed = Math.max(0, (now - last) / 1000);
+    last = now;
+    if (S.mode === "play") {
+      visualTime += elapsed;
+      let remaining = elapsed;
+      while (remaining > 0 && S.mode === "play") {
+        const dt = Math.min(remaining, 1 / 60);
+        update(dt);
+        remaining -= dt;
+      }
+    }
+    render(visualTime);
+    updateHud();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
